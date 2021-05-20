@@ -11,10 +11,15 @@ plugins:
   - serverless-offline
 
 custom:
+  defaultLambdaCors:
+    origin: '*'
+    headers:
+      - '*'
   dotenvVars: ${file(configs.js)}
   tables:
     submissionsTable: ${self:service}-submissions-${sls:stage}
     usersTable: ${self:service}-users-${sls:stage}
+    ratingsTable: ${self:service}-ratings-${sls:stage}
 
 provider:
   name: aws
@@ -35,7 +40,7 @@ functions:
     handler: src/handlers/users.signup
     events:
       - http:
-          cors: true
+          cors: ${self:custom.defaultLambdaCors}
           path: /users
           method: POST
     environment:
@@ -46,7 +51,7 @@ functions:
     handler: src/handlers/users.login
     events:
       - http:
-          cors: true
+          cors: ${self:custom.defaultLambdaCors}
           path: /users/login
           method: POST
     environment:
@@ -57,7 +62,7 @@ functions:
     handler: src/handlers/users.update
     events:
       - http:
-          cors: true
+          cors: ${self:custom.defaultLambdaCors}
           path: /users
           method: PATCH
     environment:
@@ -68,11 +73,23 @@ functions:
     handler: src/handlers/submissions.create
     events:
       - http:
-          cors: true
+          cors: ${self:custom.defaultLambdaCors}
           path: /submissions
           method: POST
     environment:
       DYNAMODB_SUBMISSIONS_TABLE: ${self:custom.tables.submissionsTable}
+      DYNAMODB_USERS_TABLE: ${self:custom.tables.usersTable}
+      JWT_SECRET: ${self:custom.dotenvVars.JWT_SECRET}
+
+  createRating:
+    handler: src/handlers/ratings.create
+    events:
+      - http:
+          cors: ${self:custom.defaultLambdaCors}
+          path: /ratings
+          method: POST
+    environment:
+      DYNAMODB_RATINGS_TABLE: ${self:custom.tables.ratingsTable}
       DYNAMODB_USERS_TABLE: ${self:custom.tables.usersTable}
       JWT_SECRET: ${self:custom.dotenvVars.JWT_SECRET}
 
@@ -99,4 +116,15 @@ resources:
             AttributeType: S
         KeySchema:
           - AttributeName: email
+            KeyType: HASH
+    ratingsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        BillingMode: PAY_PER_REQUEST
+        TableName: ${self:custom.tables.ratingsTable}
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
             KeyType: HASH

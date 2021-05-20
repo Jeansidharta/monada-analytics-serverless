@@ -43,11 +43,11 @@ export const login: APIGatewayProxyHandler = withBody(async event => {
 	}
 
 	if (!user) {
-		return ServerResponse.error(403, 'O usuário não foi encontrado');
+		return ServerResponse.error(403, 'Usuário ou senha incorretos');
 	}
 
 	if (!bcrypt.compareSync(body.password, user.password)) {
-		return ServerResponse.error(403, 'Senha incorreta');
+		return ServerResponse.error(403, 'Usuário ou senha incorretos');
 	}
 
 	if (!JWT_SECRET) {

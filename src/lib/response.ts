@@ -9,7 +9,8 @@ export class ServerResponse {
 		this.headers = {
 			'Content-Type': 'application/json',
 			'Access-Control-Allow-Origin': '*',
-			'Access-Control-Expose-Headers': 'authorization',
+			'Access-Control-Expose-Headers': '*',
+			'Access-Control-Allow-Headers': '*',
 		};
 	}
 

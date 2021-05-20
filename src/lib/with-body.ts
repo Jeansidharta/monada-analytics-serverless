@@ -3,7 +3,7 @@ import { ServerResponse } from './response';
 
 export function withBody(handler: APIGatewayProxyHandler) {
 	return (async (event, ...args) => {
-		const contentType = event.headers['content-type'] as string;
+		const contentType = (event.headers['content-type'] || event.headers['Content-Type']) as string;
 		if (!contentType) return ServerResponse.error(415, `Missing Content-Type header`);
 
 		if (contentType !== 'application/json') {

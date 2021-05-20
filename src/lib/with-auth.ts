@@ -7,7 +7,7 @@ import { getUser } from '../dynamo/users';
 export function withAuth(fetchUser: boolean, handler: APIGatewayProxyHandler) {
 	return (async (event, ...args) => {
 		const JWT_SECRET = process.env['JWT_SECRET'] as string;
-		const token = event.headers['authorization'] as string;
+		const token = (event.headers['authorization'] || event.headers['Authorization']) as string;
 		if (!token) return ServerResponse.error(401, `Missing authorization header`);
 
 		if (!JWT_SECRET) {

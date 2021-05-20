@@ -8,17 +8,20 @@ Content-Type: application/json
 }
 
 ###
+OPTIONS https://dxflmodbr0.execute-api.us-east-1.amazonaws.com/dev/users/login HTTP/1.1
 
-POST https://njcd2uk46m.execute-api.us-east-1.amazonaws.com/users/login HTTP/1.1
+###
+
+POST https://dxflmodbr0.execute-api.us-east-1.amazonaws.com/dev/users/login HTTP/1.1
 Content-Type: application/json
 
 {
-	"email": "monada.tecash@gmail.com",
-	"password": "testeasdasd123"
+	"email": "contato@monada.tech",
+	"password": "teste123"
 }
 
 ###
-PATCH http://localhost:3000/users HTTP/1.1
+PATCH http://localhost:8080/dev/users HTTP/1.1
 Content-Type: application/json
 Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Im1vbmFkYS50ZWNoQGdtYWlsLmNvbSIsImlhdCI6MTYyMTQ5MzEwNiwiZXhwIjoxNjIyMDk3OTA2fQ.F66vka4szbWzV0yKcz5OtxCwhkLNXxuZGNdncLbBCsQ
 
