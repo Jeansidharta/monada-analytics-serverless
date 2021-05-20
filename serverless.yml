@@ -34,7 +34,8 @@ functions:
   userSignup:
     handler: src/handlers/users.signup
     events:
-      - httpApi:
+      - http:
+          cors: true
           path: /users
           method: POST
     environment:
@@ -44,7 +45,8 @@ functions:
   userLogin:
     handler: src/handlers/users.login
     events:
-      - httpApi:
+      - http:
+          cors: true
           path: /users/login
           method: POST
     environment:
@@ -54,7 +56,8 @@ functions:
   userUpdate:
     handler: src/handlers/users.update
     events:
-      - httpApi:
+      - http:
+          cors: true
           path: /users
           method: PATCH
     environment:
@@ -64,7 +67,8 @@ functions:
   submissionsCreate:
     handler: src/handlers/submissions.create
     events:
-      - httpApi:
+      - http:
+          cors: true
           path: /submissions
           method: POST
     environment:

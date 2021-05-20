@@ -19,6 +19,6 @@ export const create: APIGatewayProxyHandler = withAuth(
 			return ServerResponse.internalError();
 		}
 
-		return ServerResponse.success(submission, 'Submission created succcessfuly');
+		return ServerResponse.success(submission, 'Formulário submetido com sucesso');
 	}),
 );

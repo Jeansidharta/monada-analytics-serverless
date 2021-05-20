@@ -1,13 +1,15 @@
 export class ServerResponse {
 	public statusCode: number;
 	public body: string;
-	public headers: Record<string, string>;
+	public headers: Record<string, any>;
 
 	constructor(statusCode: number, success: boolean, message?: string, payload?: any) {
 		this.statusCode = statusCode;
 		this.body = JSON.stringify({ success, message, payload });
 		this.headers = {
 			'Content-Type': 'application/json',
+			'Access-Control-Allow-Origin': '*',
+			'Access-Control-Expose-Headers': 'authorization',
 		};
 	}
 

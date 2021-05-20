@@ -12,7 +12,7 @@ export function withAuth(fetchUser: boolean, handler: APIGatewayProxyHandler) {
 
 		if (!JWT_SECRET) {
 			console.error(`Environment variable 'JWT_SECRET' not found. Check your .env file`);
-			return ServerResponse.error(500, 'Internal error');
+			return ServerResponse.internalError();
 		}
 
 		let email: string;
@@ -30,7 +30,7 @@ export function withAuth(fetchUser: boolean, handler: APIGatewayProxyHandler) {
 				user = await getUser(email);
 			} catch (e) {
 				console.error('Failed to fetch user on authorization verification', e);
-				return ServerResponse.error(500, 'Internal error');
+				return ServerResponse.internalError();
 			}
 
 			if (!user) {
