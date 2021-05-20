@@ -1,0 +1,98 @@
+useDotenv: true
+configValidationMode: error
+unresolvedVariablesNotificationMode: error
+variablesResolutionMode: 20210326
+
+service: monada-back
+frameworkVersion: '2'
+
+plugins:
+  - serverless-plugin-typescript
+  - serverless-offline
+
+custom:
+  dotenvVars: ${file(configs.js)}
+  tables:
+    submissionsTable: ${self:service}-submissions-${sls:stage}
+    usersTable: ${self:service}-users-${sls:stage}
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  lambdaHashingVersion: 20201221
+  iam:
+    role:
+      name: ${self:service}-root
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:*
+            - lambda:*
+          Resource: '*'
+
+functions:
+  userSignup:
+    handler: src/handlers/users.signup
+    events:
+      - httpApi:
+          path: /users
+          method: POST
+    environment:
+      SIGNUP_SECRET: ${env:SIGNUP_SECRET}
+      DYNAMODB_USERS_TABLE: ${self:custom.tables.usersTable}
+
+  userLogin:
+    handler: src/handlers/users.login
+    events:
+      - httpApi:
+          path: /users/login
+          method: POST
+    environment:
+      DYNAMODB_USERS_TABLE: ${self:custom.tables.usersTable}
+      JWT_SECRET: ${self:custom.dotenvVars.JWT_SECRET}
+
+  userUpdate:
+    handler: src/handlers/users.update
+    events:
+      - httpApi:
+          path: /users
+          method: PATCH
+    environment:
+      DYNAMODB_USERS_TABLE: ${self:custom.tables.usersTable}
+      JWT_SECRET: ${self:custom.dotenvVars.JWT_SECRET}
+
+  submissionsCreate:
+    handler: src/handlers/submissions.create
+    events:
+      - httpApi:
+          path: /submissions
+          method: POST
+    environment:
+      DYNAMODB_SUBMISSIONS_TABLE: ${self:custom.tables.submissionsTable}
+      DYNAMODB_USERS_TABLE: ${self:custom.tables.usersTable}
+      JWT_SECRET: ${self:custom.dotenvVars.JWT_SECRET}
+
+resources:
+  Resources:
+    submissionsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        BillingMode: PAY_PER_REQUEST
+        TableName: ${self:custom.tables.submissionsTable}
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+    usersTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        BillingMode: PAY_PER_REQUEST
+        TableName: ${self:custom.tables.usersTable}
+        AttributeDefinitions:
+          - AttributeName: email
+            AttributeType: S
+        KeySchema:
+          - AttributeName: email
+            KeyType: HASH
