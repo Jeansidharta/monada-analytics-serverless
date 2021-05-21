@@ -42,7 +42,7 @@ functions:
     events:
       - http:
           cors: ${self:custom.defaultLambdaCors}
-          path: /users
+          path: /spreadsheet
           method: POST
     environment:
       DYNAMODB_SUBMISSIONS_TABLE: ${self:custom.tables.submissionsTable}
@@ -66,7 +66,7 @@ functions:
           path: /users
           method: POST
     environment:
-      SIGNUP_SECRET: ${env:SIGNUP_SECRET}
+      SIGNUP_SECRET: ${self:custom.dotenvVars.SIGNUP_SECRET}
       DYNAMODB_USERS_TABLE: ${self:custom.tables.usersTable}
 
   userLogin:
@@ -76,17 +76,6 @@ functions:
           cors: ${self:custom.defaultLambdaCors}
           path: /users/login
           method: POST
-    environment:
-      DYNAMODB_USERS_TABLE: ${self:custom.tables.usersTable}
-      JWT_SECRET: ${self:custom.dotenvVars.JWT_SECRET}
-
-  userUpdate:
-    handler: src/handlers/users.update
-    events:
-      - http:
-          cors: ${self:custom.defaultLambdaCors}
-          path: /users
-          method: PATCH
     environment:
       DYNAMODB_USERS_TABLE: ${self:custom.tables.usersTable}
       JWT_SECRET: ${self:custom.dotenvVars.JWT_SECRET}

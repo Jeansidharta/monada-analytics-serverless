@@ -4,11 +4,11 @@ import { ServerResponse } from '../lib/response';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import { User } from '../models/user';
-import { withAuth } from '../lib/with-auth';
-import { createUser, getUser, updateUserAbout } from '../dynamo/users';
+import { createUser, getUser } from '../dynamo/users';
+import { readFromEnvironment } from '../lib/environment';
 
 export const signup: APIGatewayProxyHandler = withBody(async event => {
-	const SIGNUP_SECRET = process.env['SIGNUP_SECRET'] as string;
+	const SIGNUP_SECRET = readFromEnvironment('SIGNUP_SECRET');
 
 	const body = event.body as unknown as { email: string; password: string; secret: string };
 	if (!body.email) return ServerResponse.error(400, 'O email não pode ser vazio');
@@ -28,7 +28,7 @@ export const signup: APIGatewayProxyHandler = withBody(async event => {
 });
 
 export const login: APIGatewayProxyHandler = withBody(async event => {
-	const JWT_SECRET = process.env['JWT_SECRET'] as string;
+	const JWT_SECRET = readFromEnvironment('JWT_SECRET');
 
 	const body = event.body as unknown as { email: string; password: string };
 	if (!body.email) return ServerResponse.error(400, 'O email não pode ser vazio');
@@ -50,11 +50,6 @@ export const login: APIGatewayProxyHandler = withBody(async event => {
 		return ServerResponse.error(403, 'Usuário ou senha incorretos');
 	}
 
-	if (!JWT_SECRET) {
-		console.error(`Environment variable 'JWT_SECRET' not found. Check your .env file`);
-		return ServerResponse.internalError();
-	}
-
 	const token = jwt.sign({ email: body.email }, JWT_SECRET, { expiresIn: '7d' });
 
 	const response = ServerResponse.success(
@@ -64,21 +59,3 @@ export const login: APIGatewayProxyHandler = withBody(async event => {
 	response.headers['Authorization'] = token;
 	return response;
 });
-
-export const update: APIGatewayProxyHandler = withAuth(
-	false,
-	withBody(async event => {
-		const email = (event as any).tokenContent.email as string;
-		const body = event.body as unknown as { about: any };
-		if (!body.about) return ServerResponse.error(400, 'Os dados não podem ser vazios');
-
-		let updatedUser: User;
-		try {
-			updatedUser = await updateUserAbout(email, body.about);
-		} catch (e) {
-			console.error(e);
-			return ServerResponse.internalError();
-		}
-		return ServerResponse.success({ ...updatedUser, password: null }, 'Atualização bem sucedida');
-	}),
-);
