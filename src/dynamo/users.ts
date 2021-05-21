@@ -1,13 +1,10 @@
 import aws from 'aws-sdk';
+import { readFromEnvironment } from '../lib/environment';
 import { User } from '../models/user';
 
 export async function createUser(email: string, hashedPassword: string) {
-	const DYNAMODB_USERS_TABLE = process.env['DYNAMODB_USERS_TABLE'] as string;
 	const docClient = new aws.DynamoDB.DocumentClient();
-
-	if (!DYNAMODB_USERS_TABLE) {
-		throw new Error(`Environment variable 'DYNAMODB_USERS_TABLE' not found. Check your .env file`);
-	}
+	const DYNAMODB_USERS_TABLE = readFromEnvironment('DYNAMODB_USERS_TABLE');
 
 	const Item: User = {
 		email: email,
@@ -22,12 +19,8 @@ export async function createUser(email: string, hashedPassword: string) {
 }
 
 export async function getUser(email: string) {
-	const DYNAMODB_USERS_TABLE = process.env['DYNAMODB_USERS_TABLE'] as string;
 	const docClient = new aws.DynamoDB.DocumentClient();
-
-	if (!DYNAMODB_USERS_TABLE) {
-		throw new Error(`Environment variable 'DYNAMODB_USERS_TABLE' not found. Check your .env file`);
-	}
+	const DYNAMODB_USERS_TABLE = readFromEnvironment('DYNAMODB_USERS_TABLE');
 
 	const result = await docClient.get({ TableName: DYNAMODB_USERS_TABLE, Key: { email } }).promise();
 	if (!result.Item) {
@@ -38,12 +31,8 @@ export async function getUser(email: string) {
 }
 
 export async function updateUserAbout(email: string, about: any) {
-	const DYNAMODB_USERS_TABLE = process.env['DYNAMODB_USERS_TABLE'] as string;
 	const docClient = new aws.DynamoDB.DocumentClient();
-
-	if (!DYNAMODB_USERS_TABLE) {
-		throw new Error(`Environment variable 'DYNAMODB_USERS_TABLE' not found. Check your .env file`);
-	}
+	const DYNAMODB_USERS_TABLE = readFromEnvironment('DYNAMODB_USERS_TABLE');
 
 	const result = await docClient
 		.update({
