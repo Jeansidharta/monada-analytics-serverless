@@ -9,19 +9,16 @@ export async function createUser(email: string, hashedPassword: string) {
 		throw new Error(`Environment variable 'DYNAMODB_USERS_TABLE' not found. Check your .env file`);
 	}
 
-	const result = await docClient
-		.put({
-			TableName: DYNAMODB_USERS_TABLE,
-			Item: {
-				email: email,
-				password: hashedPassword,
-			},
-		})
-		.promise();
-	if (!result.Attributes) {
-		throw new Error('Failed to create user');
-	}
-	return result.Attributes as unknown as User;
+	const Item: User = {
+		email: email,
+		password: hashedPassword,
+		creationDate: Date.now(),
+		about: undefined,
+	};
+
+	await docClient.put({ TableName: DYNAMODB_USERS_TABLE, Item }).promise();
+
+	return Item;
 }
 
 export async function getUser(email: string) {

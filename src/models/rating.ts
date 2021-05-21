@@ -3,4 +3,5 @@ export type Rating = {
 	message: string;
 	score: number;
 	userEmail: string;
+	creationDate: number;
 };
