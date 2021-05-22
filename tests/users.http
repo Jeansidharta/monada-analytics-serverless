@@ -1,10 +1,8 @@
-POST http://localhost:3000/users HTTP/1.1
+POST https://y2585lmzr7.execute-api.us-east-1.amazonaws.com/dev/spreadsheet HTTP/1.1
 Content-Type: application/json
 
 {
-	"email": "contato@monada.tech",
-	"password": "teste123",
-	"secret": "super-secret-signup-key-just-for-me"
+	"secret": "sweep-super-secret-key-shhhh-tell-no-one"
 }
 
 ###

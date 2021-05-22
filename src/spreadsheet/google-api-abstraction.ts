@@ -56,3 +56,18 @@ export async function writeRangeToSpreadsheet(range: string, values: (string | n
 		},
 	});
 }
+
+export async function appendToSpreadsheet(range: string, values: (string | number)[][]) {
+	const spreadsheetId = readFromEnvironment('SPREADSHEET_DATABASE_ID');
+	const sheets = createSheetsInstance();
+
+	return sheets.spreadsheets.values.append({
+		spreadsheetId,
+		range,
+		valueInputOption: 'RAW',
+		requestBody: {
+			range,
+			values,
+		},
+	});
+}

@@ -1,133 +1,23 @@
-import { APIGatewayProxyHandler } from 'aws-lambda';
+import { APIGatewayProxyHandler, DynamoDBStreamHandler } from 'aws-lambda';
 import { readAllSubmissions } from '../dynamo/submissions';
 import { ServerResponse } from '../lib/response';
+import { submissionToSpreadsheetRow } from '../spreadsheet/submission-to-row';
 import { Submission } from '../models/submission';
-import { writeRangeToSpreadsheet } from '../spreadsheet';
+import { withBody } from '../lib/with-body';
+import { readFromEnvironment } from '../lib/environment';
+import {
+	appendToSpreadsheet,
+	writeRangeToSpreadsheet,
+} from '../spreadsheet/google-api-abstraction';
+import { numberToLetters } from '../lib/number-to-letters';
 
-const sheetsColumnsName = [
-	'id',
-	'creationDate',
-	'userEmail',
-	{
-		keyName: 'data',
-		columns: [
-			'message',
-			{
-				keyName: 'about',
-				columns: [
-					'wantToKeepHomeOffice',
-					'willHomeOfficeWork',
-					'race',
-					'sexuality',
-					'gender',
-					'transgender',
-					'ageGroup',
-					'deficiency',
-					'originCountry',
-					'originState',
-					'civilState',
-					'workingState',
-					'numberOfPeople',
-					'numberOfFinancialDependents',
-					'familyIncome',
-					'incomePercentage',
-					'initialHierarchy',
-					'currentHierarchy',
-					'workYears',
-					'transportMethod',
-					'transportTimeLength',
-					'adaptationEfficiency',
-					'workSatisfaction',
-				],
-			},
-			{
-				keyName: 'exclusionCategories',
-				columns: [
-					'Acesso e participação',
-					'Aprendizado e crescimento',
-					'Elogio',
-					'Equilíbrio entre vida pessoal e profissional',
-					'Interações no trabalho',
-					'Oportunidades de carreira',
-					'Reconhecimento',
-					'Respeito',
-					'Uso de habilidades e tarefas',
-					'Outro',
-				],
-			},
-			{
-				keyName: 'exclusionSources',
-				columns: [
-					'Clientes / Parceiros',
-					'Colaboradores',
-					'Lideranças',
-					'Outro',
-					'Políticas da Empresa',
-					'Recursos Humanos',
-				],
-			},
-		],
-	},
-];
-
-const lettersArray = [
-	'A',
-	'B',
-	'C',
-	'D',
-	'E',
-	'F',
-	'G',
-	'H',
-	'I',
-	'J',
-	'K',
-	'L',
-	'M',
-	'N',
-	'O',
-	'P',
-	'Q',
-	'R',
-	'S',
-	'T',
-	'U',
-	'V',
-	'W',
-	'X',
-	'Y',
-	'Z',
-];
-
-function numberToLetters(num: number) {
-	const letters: string[] = [];
-
-	for (; num >= 0; num -= lettersArray.length) {
-		letters.push(lettersArray[num % lettersArray.length]!);
+export const copyWholeDatabaseToSpreadsheet: APIGatewayProxyHandler = withBody(async event => {
+	const body = event.body as any as { secret: string };
+	if (!body.secret) return ServerResponse.error(400, `Key 'secret' is required`);
+	if (body.secret !== readFromEnvironment('SWEEP_DATABASE_KEY')) {
+		return ServerResponse.error(400, 'Invalid Secret');
 	}
 
-	return letters.join('');
-}
-
-function extractObjectIntoArray(object: any, keys: any[]) {
-	const values: any[] = [];
-	keys.forEach(key => {
-		if (typeof key === 'object') {
-			const { keyName, columns } = key;
-			extractObjectIntoArray(object[keyName], columns).forEach(elem => values.push(elem));
-		} else {
-			const value = object[key];
-			values.push(value);
-		}
-	});
-	return values;
-}
-
-function parseSubmissionIntoColumn(submission: Submission) {
-	return extractObjectIntoArray(submission, sheetsColumnsName) as string[];
-}
-
-export const hello: APIGatewayProxyHandler = async () => {
 	let submissions: Submission[];
 	try {
 		const response = await readAllSubmissions();
@@ -138,12 +28,25 @@ export const hello: APIGatewayProxyHandler = async () => {
 		return ServerResponse.internalError();
 	}
 
-	const rows = submissions.map(parseSubmissionIntoColumn);
-
+	const sheetRows = submissions.map(submission => submissionToSpreadsheetRow(submission, false));
 	await writeRangeToSpreadsheet(
-		`Submissoes!A3:${numberToLetters(rows[0]!.length)}${rows.length + 2}`,
-		rows,
+		`A3:${numberToLetters(sheetRows[0]!.length)}${sheetRows.length + 2}`,
+		sheetRows,
 	);
+	return ServerResponse.success(undefined);
+});
 
-	return ServerResponse.success(rows);
+export const createRowFromNewEntry: DynamoDBStreamHandler = async event => {
+	await Promise.all(
+		event.Records.map(async record => {
+			if (record.eventName !== 'INSERT') return;
+			if (!record.dynamodb) {
+				throw new Error('dynamodb object was not found on event.');
+			}
+			const submission = record.dynamodb.NewImage as Submission;
+			const sheetRows = [submissionToSpreadsheetRow(submission, true)];
+			await appendToSpreadsheet(`A3:${numberToLetters(sheetRows[0]!.length)}`, sheetRows);
+			console.log('Created new row on spreadsheet for submission id', submission.id);
+		}),
+	);
 };
