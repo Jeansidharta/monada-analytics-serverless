@@ -13,6 +13,34 @@ const sheetsColumnsName = [
 		columns: [
 			'message',
 			{
+				keyName: 'about',
+				columns: [
+					'wantToKeepHomeOffice',
+					'willHomeOfficeWork',
+					'race',
+					'sexuality',
+					'gender',
+					'transgender',
+					'ageGroup',
+					'deficiency',
+					'originCountry',
+					'originState',
+					'civilState',
+					'workingState',
+					'numberOfPeople',
+					'numberOfFinancialDependents',
+					'familyIncome',
+					'incomePercentage',
+					'initialHierarchy',
+					'currentHierarchy',
+					'workYears',
+					'transportMethod',
+					'transportTimeLength',
+					'adaptationEfficiency',
+					'workSatisfaction',
+				],
+			},
+			{
 				keyName: 'exclusionCategories',
 				columns: [
 					'Acesso e participação',
@@ -75,7 +103,7 @@ function numberToLetters(num: number) {
 	const letters: string[] = [];
 
 	for (; num >= 0; num -= lettersArray.length) {
-		letters.push(lettersArray[num]!);
+		letters.push(lettersArray[num % lettersArray.length]!);
 	}
 
 	return letters.join('');
@@ -89,8 +117,7 @@ function extractObjectIntoArray(object: any, keys: any[]) {
 			extractObjectIntoArray(object[keyName], columns).forEach(elem => values.push(elem));
 		} else {
 			const value = object[key];
-			if (typeof value === 'boolean') values.push({ bool_value: value });
-			else values.push(value);
+			values.push(value);
 		}
 	});
 	return values;
