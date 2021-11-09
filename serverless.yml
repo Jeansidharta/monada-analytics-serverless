@@ -80,7 +80,7 @@ functions:
       SPREADSHEET_REDIRECT_URIS: ${self:custom.dotenvVars.SPREADSHEET_REDIRECT_URIS}
 
   userSignup:
-    handler: src/handlers/users.signup
+    handler: src/handlers/users/signup.signup
     events:
       - http:
           cors: ${self:custom.defaultLambdaCors}
@@ -91,7 +91,7 @@ functions:
       DYNAMODB_USERS_TABLE: ${self:custom.tables.usersTable}
 
   userLogin:
-    handler: src/handlers/users.login
+    handler: src/handlers/users/login.login
     events:
       - http:
           cors: ${self:custom.defaultLambdaCors}

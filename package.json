@@ -5,7 +5,8 @@
 	"main": "handler.js",
 	"scripts": {
 		"offline": "serverless offline --httpPort 8080",
-		"deploy": "serverless deploy",
+		"deploy:prod": "serverless deploy --stage prod",
+		"deploy:dev": "serverless deploy --stage dev",
 		"lint": "tsc --noEmit",
 		"upgrade": "npx npm-check-updates -u"
 	},
