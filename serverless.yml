@@ -28,7 +28,7 @@ provider:
   lambdaHashingVersion: 20201221
   iam:
     role:
-      name: ${self:service}-root
+      name: ${self:service}-root-${sls:stage}
       statements:
         - Effect: Allow
           Action:
