@@ -1,27 +1,38 @@
-import { APIGatewayProxyHandler } from 'aws-lambda';
 import { createRating } from '../dynamo/ratings';
-import { ServerResponse } from '../lib/response';
-import { withAuth } from '../lib/with-auth';
-import { withBody } from '../lib/with-body';
+import { expectAuth } from '../lib/handler-validators/expect-auth';
+import { expectBody } from '../lib/handler-validators/expect-body';
+import { validateBody } from '../lib/handler-validators/validate-body';
+import { makeGatewayHandler } from '../lib/make-handler';
+import { ServerResponse } from '../lib/server-response';
 import { Rating } from '../models/rating';
+import v8n from 'v8n';
+import { expectEnv } from '../lib/handler-validators/require-env';
 
-export const create: APIGatewayProxyHandler = withAuth(
-	false,
-	withBody(async event => {
-		const email = (event as any).tokenContent.email as string;
-		const body = event.body as unknown as { score: number; message?: string };
-
-		if (!body.score) return ServerResponse.error(400, 'Você deve fornecer uma pontuação');
+export const create = makeGatewayHandler()
+	.use(expectEnv('DYNAMODB_RATINGS_TABLE'))
+	.use(expectEnv('JWT_SECRET'))
+	.use(expectAuth())
+	.use(expectBody())
+	.use(
+		validateBody<{ score: number; message?: string }>(
+			v8n().schema({
+				score: v8n().number().not.empty(),
+				message: v8n().string(),
+			}),
+		),
+	)
+	.asHandler(async middlewareData => {
+		const email = middlewareData.tokenContent.email;
+		const body = middlewareData.body;
 
 		const { score, message } = body;
 
 		let rating: Rating;
 		try {
-			rating = await createRating(email, score, message);
+			rating = await createRating(email, score, message, middlewareData.DYNAMODB_RATINGS_TABLE);
 		} catch (e) {
 			console.error(e);
 			return ServerResponse.internalError();
 		}
 		return ServerResponse.success(rating, 'Sucesso');
-	}),
-);
+	});
