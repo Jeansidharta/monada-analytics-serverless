@@ -1,6 +1,6 @@
 export type Submission = {
 	id: string;
-	userEmail: string;
+	userCNPJ: string;
 	data: any;
 	creationDate: number;
 };

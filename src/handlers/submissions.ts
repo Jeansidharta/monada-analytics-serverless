@@ -12,13 +12,13 @@ export const create = makeGatewayHandler()
 	.use(expectBody())
 	.use(expectAuth())
 	.asHandler(async middlewareData => {
-		const userEmail = middlewareData.tokenContent.email;
+		const userCNPJ = middlewareData.tokenContent.cnpj;
 		const body = middlewareData.body as any;
 
 		let submission: Submission;
 		try {
 			submission = await createSubmission(
-				userEmail,
+				userCNPJ,
 				body,
 				middlewareData.DYNAMODB_SUBMISSIONS_TABLE,
 			);

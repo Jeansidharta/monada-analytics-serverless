@@ -1,7 +1,7 @@
 import { ServerResponse } from '../server-response';
 import { HTTPStatusCode } from '../server-response/status-codes';
 
-import { V8nValidator, ValidationError } from 'v8n';
+import type { V8nValidator, ValidationError } from 'v8n';
 import { Middleware } from '../make-handler/middleware';
 
 type RequiredData = {

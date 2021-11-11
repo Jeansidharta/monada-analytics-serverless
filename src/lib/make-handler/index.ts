@@ -16,12 +16,17 @@ class Handler<DataType extends ObjAny, EventType> {
 
 	asHandler(handler: Middleware<{}, DataType, EventType>) {
 		return async (event: EventType) => {
-			const data = {};
-			for (const middleware of this.middlewares) {
-				let value = await middleware(data as any, event);
-				if (value instanceof ServerResponse) return value;
+			try {
+				const data = {};
+				for (const middleware of this.middlewares) {
+					let value = await middleware(data as any, event);
+					if (value instanceof ServerResponse) return value;
+				}
+				return handler(data as any, event);
+			} catch (e) {
+				console.error(e);
+				return ServerResponse.internalError();
 			}
-			return handler(data as any, event);
 		};
 	}
 }

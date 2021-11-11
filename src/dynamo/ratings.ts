@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { Rating } from '../models/rating';
 
 export async function createRating(
-	userEmail: string,
+	userCNPJ: string,
 	score: number,
 	message: string = '',
 	DYNAMODB_RATINGS_TABLE: string,
@@ -12,7 +12,7 @@ export async function createRating(
 
 	const Item: Rating = {
 		id: uuidv4(),
-		userEmail,
+		userCNPJ,
 		message,
 		score,
 		creationDate: Date.now(),

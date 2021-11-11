@@ -1,7 +1,5 @@
 import { ServerResponse } from '../../lib/server-response';
-import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
-import { User } from '../../models/user';
 import { getUser } from '../../dynamo/users';
 import { makeGatewayHandler } from '../../lib/make-handler';
 import { expectEnv } from '../../lib/handler-validators/require-env';
@@ -9,6 +7,9 @@ import { expectBody } from '../../lib/handler-validators/expect-body';
 import { validateBody } from '../../lib/handler-validators/validate-body';
 import v8n from 'v8n';
 import { expectHTTPMethod } from '../../lib/handler-validators/expect-http-methods';
+import { isUserInitialized, UserInitialized, UserUninitialized } from '../../models/user';
+import { HTTPStatusCode } from '../../lib/server-response/status-codes';
+import { generateJWT } from '../../lib/jwt';
 
 export const login = makeGatewayHandler()
 	.use(expectEnv('JWT_SECRET'))
@@ -16,9 +17,9 @@ export const login = makeGatewayHandler()
 	.use(expectHTTPMethod('POST'))
 	.use(expectBody())
 	.use(
-		validateBody<{ email: string; password: string }>(
+		validateBody<{ cnpj: string; password: string }>(
 			v8n().schema({
-				email: v8n().string().not.empty(),
+				cnpj: v8n().string().not.empty(),
 				password: v8n().string().not.empty(),
 			}),
 		),
@@ -26,26 +27,39 @@ export const login = makeGatewayHandler()
 	.asHandler(async middlewareData => {
 		const body = middlewareData.body;
 
-		let user: User | null;
+		let user: UserInitialized | UserUninitialized | null;
 		try {
-			user = await getUser(body.email, middlewareData.DYNAMODB_USERS_TABLE);
+			user = await getUser(body.cnpj, middlewareData.DYNAMODB_USERS_TABLE);
 		} catch (e) {
-			console.error(e);
+			console.error('Failed to fetch user from CNPJ', e);
 			return ServerResponse.internalError();
 		}
 
 		if (!user) {
-			return ServerResponse.error(403, 'Usuário ou senha incorretos');
+			return ServerResponse.error(
+				HTTPStatusCode.CLIENT_ERROR.C403_FORBIDDEN,
+				'Usuário ou senha incorretos',
+			);
 		}
 
-		if (!bcrypt.compareSync(body.password, user.password)) {
-			return ServerResponse.error(403, 'Usuário ou senha incorretos');
+		if (!isUserInitialized(user)) {
+			return ServerResponse.error(
+				HTTPStatusCode.CLIENT_ERROR.C403_FORBIDDEN,
+				'Usuário não inicializado',
+			);
 		}
 
-		const token = jwt.sign({ email: body.email }, middlewareData.JWT_SECRET, { expiresIn: '7d' });
+		if (!bcrypt.compareSync(body.password, user.hashedPassword)) {
+			return ServerResponse.error(
+				HTTPStatusCode.CLIENT_ERROR.C403_FORBIDDEN,
+				'Usuário ou senha incorretos',
+			);
+		}
+
+		const token = generateJWT({ cnpj: body.cnpj }, middlewareData.JWT_SECRET);
 
 		const response = ServerResponse.success(
-			{ token, user: { ...user, password: null } },
+			{ token, user: { ...user, hashedPassword: null } },
 			'Login bem sucedido',
 		);
 

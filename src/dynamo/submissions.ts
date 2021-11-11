@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { Submission } from '../models/submission';
 
 export async function createSubmission(
-	userEmail: string,
+	userCNPJ: string,
 	data: any,
 	DYNAMODB_SUBMISSIONS_TABLE: string,
 ) {
@@ -11,7 +11,7 @@ export async function createSubmission(
 
 	const Item: Submission = {
 		id: uuidv4(),
-		userEmail,
+		userCNPJ,
 		data,
 		creationDate: Date.now(),
 	};

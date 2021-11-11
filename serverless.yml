@@ -3,7 +3,7 @@ configValidationMode: error
 unresolvedVariablesNotificationMode: error
 variablesResolutionMode: 20210326
 
-service: monada-back
+service: monada-analytics
 frameworkVersion: '2'
 
 plugins:
@@ -79,15 +79,36 @@ functions:
       SPREADSHEET_CLIENT_SECRET: ${self:custom.dotenvVars.SPREADSHEET_CLIENT_SECRET}
       SPREADSHEET_REDIRECT_URIS: ${self:custom.dotenvVars.SPREADSHEET_REDIRECT_URIS}
 
-  userSignup:
-    handler: src/handlers/users/signup.signup
+  userCreate:
+    handler: src/handlers/users/create.create
     events:
       - http:
           cors: ${self:custom.defaultLambdaCors}
-          path: /users
+          path: /users/create
           method: POST
     environment:
       SIGNUP_SECRET: ${self:custom.dotenvVars.SIGNUP_SECRET}
+      DYNAMODB_USERS_TABLE: ${self:custom.tables.usersTable}
+
+  userInitialize:
+    handler: src/handlers/users/initializeFromCNPJ.initializeFromCNPJ
+    events:
+      - http:
+          cors: ${self:custom.defaultLambdaCors}
+          path: /users/initialize-from-cnpj
+          method: POST
+    environment:
+      JWT_SECRET: ${self:custom.dotenvVars.JWT_SECRET}
+      DYNAMODB_USERS_TABLE: ${self:custom.tables.usersTable}
+
+  userFetchStatus:
+    handler: src/handlers/users/fetch-status.fetchStatus
+    events:
+      - http:
+          cors: ${self:custom.defaultLambdaCors}
+          path: /users/status
+          method: POST
+    environment:
       DYNAMODB_USERS_TABLE: ${self:custom.tables.usersTable}
 
   userLogin:
@@ -98,8 +119,8 @@ functions:
           path: /users/login
           method: POST
     environment:
-      DYNAMODB_USERS_TABLE: ${self:custom.tables.usersTable}
       JWT_SECRET: ${self:custom.dotenvVars.JWT_SECRET}
+      DYNAMODB_USERS_TABLE: ${self:custom.tables.usersTable}
 
   submissionsCreate:
     handler: src/handlers/submissions.create
@@ -146,10 +167,10 @@ resources:
         BillingMode: PAY_PER_REQUEST
         TableName: ${self:custom.tables.usersTable}
         AttributeDefinitions:
-          - AttributeName: email
+          - AttributeName: cnpj
             AttributeType: S
         KeySchema:
-          - AttributeName: email
+          - AttributeName: cnpj
             KeyType: HASH
     ratingsTable:
       Type: AWS::DynamoDB::Table
