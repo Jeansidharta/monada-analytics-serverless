@@ -85,7 +85,7 @@ export const createRowFromNewEntry = makeDynamoDBStreamHandler()
 					sheetRows,
 					middlewareData,
 				);
-				console.log('Created new row on spreadsheet for submission id', submission.id);
+				console.log('Created new row on spreadsheet for submission id', submission.userCnpj);
 			}),
 		);
 		return null;

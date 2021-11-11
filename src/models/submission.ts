@@ -1,6 +1,12 @@
 export type Submission = {
-	id: string;
-	userCNPJ: string;
-	data: any;
+	userCnpj: string;
+	categories: {
+		[name: string]: SubmissionCategory;
+	};
+};
+
+export type SubmissionCategory = {
 	creationDate: number;
+	categoryName: string;
+	values: object;
 };

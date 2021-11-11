@@ -1,23 +1,38 @@
 import aws from 'aws-sdk';
-import { v4 as uuidv4 } from 'uuid';
-import { Submission } from '../models/submission';
+import { Submission, SubmissionCategory } from '../models/submission';
 
 export async function createSubmission(
-	userCNPJ: string,
-	data: any,
+	userCnpj: string,
+	categories: { [name: string]: SubmissionCategory },
 	DYNAMODB_SUBMISSIONS_TABLE: string,
 ) {
 	const docClient = new aws.DynamoDB.DocumentClient();
 
+	const newCategories: typeof categories = {};
+	for (let key of Object.keys(categories)) {
+		(newCategories as any)[key] = { ...(categories as any)[key], creationDate: Date.now() };
+	}
+
 	const Item: Submission = {
-		id: uuidv4(),
-		userCNPJ,
-		data,
-		creationDate: Date.now(),
+		userCnpj,
+		categories: newCategories,
 	};
 
 	await docClient.put({ TableName: DYNAMODB_SUBMISSIONS_TABLE, Item }).promise();
 	return Item;
+}
+
+export async function getSubmission(userCnpj: string, DYNAMODB_SUBMISSIONS_TABLE: string) {
+	const docClient = new aws.DynamoDB.DocumentClient();
+	const result = await docClient
+		.get({ TableName: DYNAMODB_SUBMISSIONS_TABLE, Key: { userCnpj } })
+		.promise();
+
+	if (!result.Item) {
+		return null;
+	}
+
+	return result.Item as unknown as Submission;
 }
 
 export async function readAllSubmissions(DYNAMODB_SUBMISSIONS_TABLE: string) {
@@ -27,4 +42,33 @@ export async function readAllSubmissions(DYNAMODB_SUBMISSIONS_TABLE: string) {
 
 	if (!data.Items) return null;
 	return data.Items as Submission[];
+}
+
+export async function addCategoryToSubmission(
+	userCnpj: string,
+	categories: { [name: string]: SubmissionCategory },
+	DYNAMODB_SUBMISSIONS_TABLE: string,
+) {
+	const docClient = new aws.DynamoDB.DocumentClient();
+
+	const UpdateExpression = `set ${Object.keys(categories)
+		.map(name => `categories.${name} = :${name}`)
+		.join(', ')}`;
+
+	const newCategories: typeof categories = {};
+	for (let key of Object.keys(categories)) {
+		(newCategories as any)[`:${key}`] = { ...(categories as any)[key], creationDate: Date.now() };
+	}
+
+	const data = await docClient
+		.update({
+			TableName: DYNAMODB_SUBMISSIONS_TABLE,
+			Key: { userCnpj },
+			UpdateExpression,
+			ExpressionAttributeValues: newCategories,
+			ReturnValues: 'ALL_NEW',
+		})
+		.promise();
+
+	return data.Attributes as SubmissionCategory;
 }

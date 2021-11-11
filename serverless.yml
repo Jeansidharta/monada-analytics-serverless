@@ -18,7 +18,7 @@ custom:
   dotenvVars: ${file(configs.js)}
   spreadsheetDatabaseID: 10o6dAfZGp2oFKW0V8uH1VnKy2y_-xxVFfnBrZhzNVfI
   tables:
-    submissionsTable: ${self:service}-submissions-${sls:stage}
+    submissionsTable: ${self:service}-user-submissions-${sls:stage}
     usersTable: ${self:service}-users-${sls:stage}
     ratingsTable: ${self:service}-ratings-${sls:stage}
 
@@ -122,13 +122,25 @@ functions:
       JWT_SECRET: ${self:custom.dotenvVars.JWT_SECRET}
       DYNAMODB_USERS_TABLE: ${self:custom.tables.usersTable}
 
-  submissionsCreate:
-    handler: src/handlers/submissions.create
+  submissionsAddCategory:
+    handler: src/handlers/submissions/add-category.addCategory
+    events:
+      - http:
+          cors: ${self:custom.defaultLambdaCors}
+          path: /submissions/add-category
+          method: POST
+    environment:
+      DYNAMODB_SUBMISSIONS_TABLE: ${self:custom.tables.submissionsTable}
+      DYNAMODB_USERS_TABLE: ${self:custom.tables.usersTable}
+      JWT_SECRET: ${self:custom.dotenvVars.JWT_SECRET}
+
+  submissionsGet:
+    handler: src/handlers/submissions/get.get
     events:
       - http:
           cors: ${self:custom.defaultLambdaCors}
           path: /submissions
-          method: POST
+          method: GET
     environment:
       DYNAMODB_SUBMISSIONS_TABLE: ${self:custom.tables.submissionsTable}
       DYNAMODB_USERS_TABLE: ${self:custom.tables.usersTable}
@@ -156,10 +168,10 @@ resources:
         StreamSpecification:
           StreamViewType: NEW_IMAGE
         AttributeDefinitions:
-          - AttributeName: id
+          - AttributeName: userCnpj
             AttributeType: S
         KeySchema:
-          - AttributeName: id
+          - AttributeName: userCnpj
             KeyType: HASH
     usersTable:
       Type: AWS::DynamoDB::Table
