@@ -8,5 +8,5 @@ export type Submission = {
 export type SubmissionCategory = {
 	creationDate: number;
 	categoryName: string;
-	values: object;
+	[key: string]: any;
 };

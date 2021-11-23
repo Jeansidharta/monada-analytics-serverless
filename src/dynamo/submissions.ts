@@ -57,7 +57,11 @@ export async function addCategoryToSubmission(
 
 	const newCategories: typeof categories = {};
 	for (let key of Object.keys(categories)) {
-		(newCategories as any)[`:${key}`] = { ...(categories as any)[key], creationDate: Date.now() };
+		newCategories[`:${key}`] = {
+			...categories[key],
+			creationDate: Date.now(),
+			categoryName: key,
+		};
 	}
 
 	const data = await docClient

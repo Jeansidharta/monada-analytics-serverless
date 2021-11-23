@@ -17,7 +17,7 @@ export const addCategory = makeGatewayHandler()
 	.use(expectAuth())
 	.asHandler(async middlewareData => {
 		const userCnpj = middlewareData.tokenContent.cnpj;
-		const body = middlewareData.body as any;
+		const body = middlewareData.body;
 
 		if (Object.values(body).some(category => typeof category !== 'object')) {
 			return ServerResponse.error(

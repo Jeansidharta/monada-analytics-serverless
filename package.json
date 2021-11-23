@@ -30,6 +30,7 @@
 		"bcryptjs": "^2.4.3",
 		"googleapis": "^91.0.0",
 		"jsonwebtoken": "^8.5.1",
+		"serverless": "^2.66.2",
 		"uuid": "^8.3.2",
 		"v8n": "github:imbrn/v8n"
 	}
