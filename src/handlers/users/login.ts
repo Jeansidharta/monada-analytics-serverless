@@ -10,10 +10,13 @@ import { expectHTTPMethod } from '../../lib/handler-validators/expect-http-metho
 import { isUserInitialized, UserInitialized, UserUninitialized } from '../../models/user';
 import { HTTPStatusCode } from '../../lib/server-response/status-codes';
 import { generateJWT } from '../../lib/jwt';
+import { createSubmission, getSubmission } from '../../dynamo/submissions';
+import { Submission } from '../../models/submission';
 
 export const login = makeGatewayHandler()
 	.use(expectEnv('JWT_SECRET'))
 	.use(expectEnv('DYNAMODB_USERS_TABLE'))
+	.use(expectEnv('DYNAMODB_SUBMISSIONS_TABLE'))
 	.use(expectHTTPMethod('POST'))
 	.use(expectBody())
 	.use(
@@ -56,10 +59,27 @@ export const login = makeGatewayHandler()
 			);
 		}
 
+		let userSubmissison: Submission;
+		try {
+			const result = await getSubmission(body.cnpj, middlewareData.DYNAMODB_SUBMISSIONS_TABLE);
+			if (!result) {
+				userSubmissison = await createSubmission(
+					body.cnpj,
+					body,
+					middlewareData.DYNAMODB_SUBMISSIONS_TABLE,
+				);
+			} else {
+				userSubmissison = result;
+			}
+		} catch (e) {
+			console.error(`Error fetching user "${body.cnpj}" submission`, e);
+			return ServerResponse.internalError();
+		}
+
 		const token = generateJWT({ cnpj: body.cnpj }, middlewareData.JWT_SECRET);
 
 		const response = ServerResponse.success(
-			{ token, user: { ...user, hashedPassword: null } },
+			{ token, user: { ...user, hashedPassword: null }, submission: userSubmissison },
 			'Login bem sucedido',
 		);
 

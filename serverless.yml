@@ -78,6 +78,7 @@ functions:
     environment:
       JWT_SECRET: ${self:custom.dotenvVars.JWT_SECRET}
       DYNAMODB_USERS_TABLE: ${self:custom.tables.usersTable}
+      DYNAMODB_SUBMISSIONS_TABLE: ${self:custom.tables.submissionsTable}
 
   submissionsAddCategory:
     handler: src/handlers/submissions/add-category.addCategory
