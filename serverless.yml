@@ -36,6 +36,7 @@ provider:
           Resource: '*'
 
 functions:
+  # User Functions
   userCreate:
     handler: src/handlers/users/create.create
     events:
@@ -80,6 +81,7 @@ functions:
       DYNAMODB_USERS_TABLE: ${self:custom.tables.usersTable}
       DYNAMODB_SUBMISSIONS_TABLE: ${self:custom.tables.submissionsTable}
 
+  # Submissions Functions
   submissionsAddCategory:
     handler: src/handlers/submissions/add-category.addCategory
     events:
@@ -104,6 +106,7 @@ functions:
       DYNAMODB_USERS_TABLE: ${self:custom.tables.usersTable}
       JWT_SECRET: ${self:custom.dotenvVars.JWT_SECRET}
 
+  # Ratings functions
   createRating:
     handler: src/handlers/ratings.create
     events:
