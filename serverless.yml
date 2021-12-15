@@ -20,6 +20,7 @@ custom:
     submissionsTable: ${self:service}-user-submissions-${sls:stage}
     usersTable: ${self:service}-users-${sls:stage}
     ratingsTable: ${self:service}-ratings-${sls:stage}
+    tosRefusalMessageTable: ${self:service}-tos-refusal-message-${sls:stage}
 
 provider:
   name: aws
@@ -119,6 +120,17 @@ functions:
       DYNAMODB_USERS_TABLE: ${self:custom.tables.usersTable}
       JWT_SECRET: ${self:custom.dotenvVars.JWT_SECRET}
 
+  # TOS Refusal functions
+  TOSRefusalMessageCreate:
+    handler: src/handlers/tos-refusal/create.create
+    events:
+      - http:
+          cors: ${self:custom.defaultLambdaCors}
+          path: /tos-refusal
+          method: POST
+    environment:
+      DYNAMODB_TOS_REFUSAL_MESSAGE_TABLE: ${self:custom.tables.tosRefusalMessageTable}
+
 resources:
   Resources:
     submissionsTable:
@@ -150,6 +162,17 @@ resources:
       Properties:
         BillingMode: PAY_PER_REQUEST
         TableName: ${self:custom.tables.ratingsTable}
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+    tosRefusalMessageTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        BillingMode: PAY_PER_REQUEST
+        TableName: ${self:custom.tables.tosRefusalMessageTable}
         AttributeDefinitions:
           - AttributeName: id
             AttributeType: S
