@@ -11,18 +11,18 @@ export const fetchStatus = makeGatewayHandler()
 	.use(expectEnv('DYNAMODB_USERS_TABLE'))
 	.use(expectBody())
 	.use(
-		validateBody<{ cnpj: string }>(
+		validateBody<{ cpf: string }>(
 			v8n().schema({
-				cnpj: v8n().string().not.empty(),
+				cpf: v8n().string().not.empty(),
 			}),
 		),
 	)
 	.asHandler(async middlewareData => {
-		const cnpj = middlewareData.body.cnpj;
+		const cpf = middlewareData.body.cpf;
 
 		let user: UserInitialized | UserUninitialized | null;
 		try {
-			user = await getUser(cnpj, middlewareData.DYNAMODB_USERS_TABLE);
+			user = await getUser(cpf, middlewareData.DYNAMODB_USERS_TABLE);
 		} catch (e) {
 			console.error('Failed to fetch user from CNPJ', e);
 			return ServerResponse.internalError();

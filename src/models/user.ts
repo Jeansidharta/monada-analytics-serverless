@@ -1,5 +1,5 @@
 export type UserUninitialized = {
-	cpfCnpj: string;
+	cpf: string;
 	creationDate: number;
 };
 
@@ -13,7 +13,7 @@ export function isUserInitialized(user: any): user is UserInitialized {
 	if (!user) return false;
 	if (typeof user !== 'object') return false;
 	if (
-		!user.cpfCnpj ||
+		!user.cpf ||
 		!user.name ||
 		!user.hashedPassword ||
 		!user.creationDate ||

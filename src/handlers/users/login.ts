@@ -20,9 +20,9 @@ export const login = makeGatewayHandler()
 	.use(expectHTTPMethod('POST'))
 	.use(expectBody())
 	.use(
-		validateBody<{ cnpj: string; password: string }>(
+		validateBody<{ cpf: string; password: string }>(
 			v8n().schema({
-				cnpj: v8n().string().not.empty(),
+				cpf: v8n().string().not.empty(),
 				password: v8n().string().not.empty(),
 			}),
 		),
@@ -32,7 +32,7 @@ export const login = makeGatewayHandler()
 
 		let user: UserInitialized | UserUninitialized | null;
 		try {
-			user = await getUser(body.cnpj, middlewareData.DYNAMODB_USERS_TABLE);
+			user = await getUser(body.cpf, middlewareData.DYNAMODB_USERS_TABLE);
 		} catch (e) {
 			console.error('Failed to fetch user from CNPJ', e);
 			return ServerResponse.internalError();
@@ -61,10 +61,10 @@ export const login = makeGatewayHandler()
 
 		let userSubmissison: Submission;
 		try {
-			const result = await getSubmission(body.cnpj, middlewareData.DYNAMODB_SUBMISSIONS_TABLE);
+			const result = await getSubmission(body.cpf, middlewareData.DYNAMODB_SUBMISSIONS_TABLE);
 			if (!result) {
 				userSubmissison = await createSubmission(
-					body.cnpj,
+					body.cpf,
 					body,
 					middlewareData.DYNAMODB_SUBMISSIONS_TABLE,
 				);
@@ -72,11 +72,11 @@ export const login = makeGatewayHandler()
 				userSubmissison = result;
 			}
 		} catch (e) {
-			console.error(`Error fetching user "${body.cnpj}" submission`, e);
+			console.error(`Error fetching user "${body.cpf}" submission`, e);
 			return ServerResponse.internalError();
 		}
 
-		const token = generateJWT({ cnpj: body.cnpj }, middlewareData.JWT_SECRET);
+		const token = generateJWT({ cpf: body.cpf }, middlewareData.JWT_SECRET);
 
 		const response = ServerResponse.success(
 			{ token, user: { ...user, hashedPassword: null }, submission: userSubmissison },

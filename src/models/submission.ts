@@ -1,5 +1,5 @@
 export type Submission = {
-	userCnpj: string;
+	userCpf: string;
 	categories: {
 		[name: string]: SubmissionCategory;
 	};

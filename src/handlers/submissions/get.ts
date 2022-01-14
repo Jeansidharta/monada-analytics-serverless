@@ -10,11 +10,11 @@ export const get = makeGatewayHandler()
 	.use(expectEnv('DYNAMODB_SUBMISSIONS_TABLE'))
 	.use(expectAuth())
 	.asHandler(async middlewareData => {
-		const userCnpj = middlewareData.tokenContent.cnpj;
+		const userCpf = middlewareData.tokenContent.cpf;
 		let submission: Submission | null;
 
 		try {
-			submission = await getSubmission(userCnpj, middlewareData.DYNAMODB_SUBMISSIONS_TABLE);
+			submission = await getSubmission(userCpf, middlewareData.DYNAMODB_SUBMISSIONS_TABLE);
 		} catch (e) {
 			console.log(e);
 			return ServerResponse.internalError();

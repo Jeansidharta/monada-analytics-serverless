@@ -15,9 +15,9 @@ export const initialize = makeGatewayHandler()
 	.use(expectEnv('DYNAMODB_USERS_TABLE'))
 	.use(expectBody())
 	.use(
-		validateBody<{ cpfCnpj: string; name: string; password: string }>(
+		validateBody<{ cpf: string; name: string; password: string }>(
 			v8n().schema({
-				cpfCnpj: v8n().string().not.empty(),
+				cpf: v8n().string().not.empty(),
 				name: v8n().string().not.empty(),
 				password: v8n().string().not.empty(),
 			}),
@@ -26,21 +26,21 @@ export const initialize = makeGatewayHandler()
 	.asHandler(async middlewareData => {
 		const body = middlewareData.body;
 
-		const cpfCnpj = body.cpfCnpj;
+		const cpf = body.cpf;
 
-		const uninitializedUser = await getUser(cpfCnpj, middlewareData.DYNAMODB_USERS_TABLE);
+		const uninitializedUser = await getUser(cpf, middlewareData.DYNAMODB_USERS_TABLE);
 
 		if (!uninitializedUser) {
 			return ServerResponse.error(
 				HTTPStatusCode.CLIENT_ERROR.C404_NOT_FOUND,
-				'User not found with this ID',
+				'Usuário não encontrado com esse CPF',
 			);
 		}
 
 		if (isUserInitialized(uninitializedUser)) {
 			return ServerResponse.error(
 				HTTPStatusCode.CLIENT_ERROR.C400_BAD_REQUEST,
-				'User has already been initialized',
+				'Este usuário já foi inicializado',
 			);
 		}
 
@@ -58,7 +58,7 @@ export const initialize = makeGatewayHandler()
 			return ServerResponse.internalError();
 		}
 
-		const token = generateJWT({ cpfCnpj }, middlewareData.JWT_SECRET);
+		const token = generateJWT({ cpf }, middlewareData.JWT_SECRET);
 
 		const response = ServerResponse.success(
 			{ token, user: { ...user, hashedPassword: null } },

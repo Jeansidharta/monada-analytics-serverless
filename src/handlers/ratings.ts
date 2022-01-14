@@ -22,14 +22,14 @@ export const create = makeGatewayHandler()
 		),
 	)
 	.asHandler(async middlewareData => {
-		const cnpj = middlewareData.tokenContent.cnpj;
+		const cpf = middlewareData.tokenContent.cpf;
 		const body = middlewareData.body;
 
 		const { score, message } = body;
 
 		let rating: Rating;
 		try {
-			rating = await createRating(cnpj, score, message, middlewareData.DYNAMODB_RATINGS_TABLE);
+			rating = await createRating(cpf, score, message, middlewareData.DYNAMODB_RATINGS_TABLE);
 		} catch (e) {
 			console.error(e);
 			return ServerResponse.internalError();

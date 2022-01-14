@@ -141,10 +141,10 @@ resources:
         StreamSpecification:
           StreamViewType: NEW_IMAGE
         AttributeDefinitions:
-          - AttributeName: userCpjCnpj
+          - AttributeName: userCpf
             AttributeType: S
         KeySchema:
-          - AttributeName: userCpjCnpj
+          - AttributeName: userCpf
             KeyType: HASH
     usersTable:
       Type: AWS::DynamoDB::Table
@@ -152,10 +152,10 @@ resources:
         BillingMode: PAY_PER_REQUEST
         TableName: ${self:custom.tables.usersTable}
         AttributeDefinitions:
-          - AttributeName: cpfCnpj
+          - AttributeName: cpf
             AttributeType: S
         KeySchema:
-          - AttributeName: cpfCnpj
+          - AttributeName: cpf
             KeyType: HASH
     ratingsTable:
       Type: AWS::DynamoDB::Table

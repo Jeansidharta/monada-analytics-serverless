@@ -16,7 +16,7 @@ export const addCategory = makeGatewayHandler()
 	.use(validateBody<{ [name: string]: SubmissionCategory }>(v8n().object().not.empty()))
 	.use(expectAuth())
 	.asHandler(async middlewareData => {
-		const userCnpj = middlewareData.tokenContent.cnpj;
+		const userCpf = middlewareData.tokenContent.cpf;
 		const body = middlewareData.body;
 
 		if (Object.values(body).some(category => typeof category !== 'object')) {
@@ -29,10 +29,10 @@ export const addCategory = makeGatewayHandler()
 		let submission: Submission;
 
 		try {
-			const result = await getSubmission(userCnpj, middlewareData.DYNAMODB_SUBMISSIONS_TABLE);
+			const result = await getSubmission(userCpf, middlewareData.DYNAMODB_SUBMISSIONS_TABLE);
 			if (!result) {
 				submission = await createSubmission(
-					userCnpj,
+					userCpf,
 					body,
 					middlewareData.DYNAMODB_SUBMISSIONS_TABLE,
 				);
@@ -47,7 +47,7 @@ export const addCategory = makeGatewayHandler()
 		console.log('Submission is now', submission);
 
 		const result = await addCategoryToSubmission(
-			userCnpj,
+			userCpf,
 			body,
 			middlewareData.DYNAMODB_SUBMISSIONS_TABLE,
 		);

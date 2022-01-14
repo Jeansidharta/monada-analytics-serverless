@@ -1,5 +1,5 @@
 import v8n from 'v8n';
-import { createUserFromCpfCnpj, doesUserExist } from '../../dynamo/users';
+import { createUserFromCpf, doesUserExist } from '../../dynamo/users';
 import { expectBody } from '../../lib/handler-validators/expect-body';
 import { expectEnv } from '../../lib/handler-validators/require-env';
 import { validateBody } from '../../lib/handler-validators/validate-body';
@@ -12,10 +12,10 @@ export const create = makeGatewayHandler()
 	.use(expectEnv('DYNAMODB_USERS_TABLE'))
 	.use(expectBody())
 	.use(
-		validateBody<{ secret: string; cpfCnpj: string }>(
+		validateBody<{ secret: string; cpf: string }>(
 			v8n().schema({
 				secret: v8n().string().not.empty(),
-				cpfCnpj: v8n().string().not.empty(),
+				cpf: v8n().string().not.empty(),
 			}),
 		),
 	)
@@ -27,20 +27,20 @@ export const create = makeGatewayHandler()
 			return ServerResponse.error(HTTPStatusCode.CLIENT_ERROR.C400_BAD_REQUEST, 'Invalid secret');
 		}
 
-		const cpfCnpj = body.cpfCnpj;
+		const cpf = body.cpf;
 
-		const cpfCnpjRegex = /(^\d{3}\.\d{3}\.\d{3}\-\d{2}$)|(^\d{2}\.\d{3}\.\d{3}\/\d{4}\-\d{2}$)/;
-		const isCNPJInvalid = !cpfCnpjRegex.exec(cpfCnpj);
+		const cpfRegex = /^\d{3}\.\d{3}\.\d{3}\-\d{2}$/;
+		const isCpfInvalid = !cpfRegex.exec(cpf);
 
-		if (isCNPJInvalid) {
+		if (isCpfInvalid) {
 			return ServerResponse.error(
 				HTTPStatusCode.CLIENT_ERROR.C400_BAD_REQUEST,
-				'Invalid CNPJ. It should be on the format of 12.345.678/9012-34',
+				'Invalid CPF. It should be on the format of XXX.XXX.XXX-XX',
 			);
 		}
 
 		// Asserts user does not exist
-		if (await doesUserExist(cpfCnpj, middlewareData.DYNAMODB_USERS_TABLE)) {
+		if (await doesUserExist(cpf, middlewareData.DYNAMODB_USERS_TABLE)) {
 			return ServerResponse.error(
 				HTTPStatusCode.CLIENT_ERROR.C400_BAD_REQUEST,
 				'User already exists',
@@ -48,7 +48,7 @@ export const create = makeGatewayHandler()
 		}
 
 		try {
-			const user = await createUserFromCpfCnpj(cpfCnpj, middlewareData.DYNAMODB_USERS_TABLE);
+			const user = await createUserFromCpf(cpf, middlewareData.DYNAMODB_USERS_TABLE);
 			return ServerResponse.success(user, 'Usuário criado com sucesso');
 		} catch (e) {
 			console.error('Failed to create user', e);

@@ -2,7 +2,7 @@ import aws from 'aws-sdk';
 import { Submission, SubmissionCategory } from '../models/submission';
 
 export async function createSubmission(
-	userCnpj: string,
+	userCpf: string,
 	categories: { [name: string]: SubmissionCategory },
 	DYNAMODB_SUBMISSIONS_TABLE: string,
 ) {
@@ -14,7 +14,7 @@ export async function createSubmission(
 	}
 
 	const Item: Submission = {
-		userCnpj,
+		userCpf,
 		categories: newCategories,
 	};
 
@@ -22,10 +22,10 @@ export async function createSubmission(
 	return Item;
 }
 
-export async function getSubmission(userCnpj: string, DYNAMODB_SUBMISSIONS_TABLE: string) {
+export async function getSubmission(userCpf: string, DYNAMODB_SUBMISSIONS_TABLE: string) {
 	const docClient = new aws.DynamoDB.DocumentClient();
 	const result = await docClient
-		.get({ TableName: DYNAMODB_SUBMISSIONS_TABLE, Key: { userCnpj } })
+		.get({ TableName: DYNAMODB_SUBMISSIONS_TABLE, Key: { userCpf } })
 		.promise();
 
 	if (!result.Item) {
@@ -45,7 +45,7 @@ export async function readAllSubmissions(DYNAMODB_SUBMISSIONS_TABLE: string) {
 }
 
 export async function addCategoryToSubmission(
-	userCnpj: string,
+	userCpf: string,
 	categories: { [name: string]: SubmissionCategory },
 	DYNAMODB_SUBMISSIONS_TABLE: string,
 ) {
@@ -67,7 +67,7 @@ export async function addCategoryToSubmission(
 	const data = await docClient
 		.update({
 			TableName: DYNAMODB_SUBMISSIONS_TABLE,
-			Key: { userCnpj },
+			Key: { userCpf },
 			UpdateExpression,
 			ExpressionAttributeValues: newCategories,
 			ReturnValues: 'ALL_NEW',
