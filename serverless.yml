@@ -50,11 +50,11 @@ functions:
       DYNAMODB_USERS_TABLE: ${self:custom.tables.usersTable}
 
   userInitialize:
-    handler: src/handlers/users/initializeFromCNPJ.initializeFromCNPJ
+    handler: src/handlers/users/initialize.initialize
     events:
       - http:
           cors: ${self:custom.defaultLambdaCors}
-          path: /users/initialize-from-cnpj
+          path: /users/initialize
           method: POST
     environment:
       JWT_SECRET: ${self:custom.dotenvVars.JWT_SECRET}
@@ -141,10 +141,10 @@ resources:
         StreamSpecification:
           StreamViewType: NEW_IMAGE
         AttributeDefinitions:
-          - AttributeName: userCnpj
+          - AttributeName: userCpjCnpj
             AttributeType: S
         KeySchema:
-          - AttributeName: userCnpj
+          - AttributeName: userCpjCnpj
             KeyType: HASH
     usersTable:
       Type: AWS::DynamoDB::Table
@@ -152,10 +152,10 @@ resources:
         BillingMode: PAY_PER_REQUEST
         TableName: ${self:custom.tables.usersTable}
         AttributeDefinitions:
-          - AttributeName: cnpj
+          - AttributeName: cpfCnpj
             AttributeType: S
         KeySchema:
-          - AttributeName: cnpj
+          - AttributeName: cpfCnpj
             KeyType: HASH
     ratingsTable:
       Type: AWS::DynamoDB::Table

@@ -1,5 +1,5 @@
 import v8n from 'v8n';
-import { createUserFromCNPJ, doesUserExist } from '../../dynamo/users';
+import { createUserFromCpfCnpj, doesUserExist } from '../../dynamo/users';
 import { expectBody } from '../../lib/handler-validators/expect-body';
 import { expectEnv } from '../../lib/handler-validators/require-env';
 import { validateBody } from '../../lib/handler-validators/validate-body';
@@ -12,10 +12,10 @@ export const create = makeGatewayHandler()
 	.use(expectEnv('DYNAMODB_USERS_TABLE'))
 	.use(expectBody())
 	.use(
-		validateBody<{ secret: string; cnpj: string }>(
+		validateBody<{ secret: string; cpfCnpj: string }>(
 			v8n().schema({
 				secret: v8n().string().not.empty(),
-				cnpj: v8n().string().not.empty(),
+				cpfCnpj: v8n().string().not.empty(),
 			}),
 		),
 	)
@@ -27,10 +27,11 @@ export const create = makeGatewayHandler()
 			return ServerResponse.error(HTTPStatusCode.CLIENT_ERROR.C400_BAD_REQUEST, 'Invalid secret');
 		}
 
-		const cnpj = body.cnpj;
+		const cpfCnpj = body.cpfCnpj;
 
-		const cnpjRegex = /^\d{2}\.\d{3}\.\d{3}\/\d{4}\-\d{2}$/;
-		const isCNPJInvalid = !cnpjRegex.exec(cnpj);
+		const cpfCnpjRegex = /(^\d{3}\.\d{3}\.\d{3}\-\d{2}$)|(^\d{2}\.\d{3}\.\d{3}\/\d{4}\-\d{2}$)/;
+		const isCNPJInvalid = !cpfCnpjRegex.exec(cpfCnpj);
+
 		if (isCNPJInvalid) {
 			return ServerResponse.error(
 				HTTPStatusCode.CLIENT_ERROR.C400_BAD_REQUEST,
@@ -39,7 +40,7 @@ export const create = makeGatewayHandler()
 		}
 
 		// Asserts user does not exist
-		if (await doesUserExist(cnpj, middlewareData.DYNAMODB_USERS_TABLE)) {
+		if (await doesUserExist(cpfCnpj, middlewareData.DYNAMODB_USERS_TABLE)) {
 			return ServerResponse.error(
 				HTTPStatusCode.CLIENT_ERROR.C400_BAD_REQUEST,
 				'User already exists',
@@ -47,10 +48,10 @@ export const create = makeGatewayHandler()
 		}
 
 		try {
-			const user = await createUserFromCNPJ(cnpj, middlewareData.DYNAMODB_USERS_TABLE);
-			return ServerResponse.success(user, '');
+			const user = await createUserFromCpfCnpj(cpfCnpj, middlewareData.DYNAMODB_USERS_TABLE);
+			return ServerResponse.success(user, 'Usuário criado com sucesso');
 		} catch (e) {
-			console.error('Failed to create user from CNPJ', e);
+			console.error('Failed to create user', e);
 			return ServerResponse.internalError();
 		}
 	});

@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
 
 export type JWTPayload = {
-	cnpj: string;
+	cpfCnpj: string;
 };
 
 export function verifyJWT(token: string, secret: string) {
@@ -12,7 +12,7 @@ export function verifyJWT(token: string, secret: string) {
 	}
 }
 
-export function generateJWT({ cnpj }: JWTPayload, secret: string) {
-	const cleanPayload: JWTPayload = { cnpj };
+export function generateJWT({ cpfCnpj }: JWTPayload, secret: string) {
+	const cleanPayload: JWTPayload = { cpfCnpj };
 	return jwt.sign(cleanPayload, secret, { expiresIn: '7d' });
 }

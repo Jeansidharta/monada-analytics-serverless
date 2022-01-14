@@ -10,14 +10,14 @@ import { isUserInitialized, UserInitialized } from '../../models/user';
 import bcrypt from 'bcryptjs';
 import { generateJWT } from '../../lib/jwt';
 
-export const initializeFromCNPJ = makeGatewayHandler()
+export const initialize = makeGatewayHandler()
 	.use(expectEnv('JWT_SECRET'))
 	.use(expectEnv('DYNAMODB_USERS_TABLE'))
 	.use(expectBody())
 	.use(
-		validateBody<{ cnpj: string; name: string; password: string }>(
+		validateBody<{ cpfCnpj: string; name: string; password: string }>(
 			v8n().schema({
-				cnpj: v8n().string().not.empty(),
+				cpfCnpj: v8n().string().not.empty(),
 				name: v8n().string().not.empty(),
 				password: v8n().string().not.empty(),
 			}),
@@ -26,14 +26,14 @@ export const initializeFromCNPJ = makeGatewayHandler()
 	.asHandler(async middlewareData => {
 		const body = middlewareData.body;
 
-		const cnpj = body.cnpj;
+		const cpfCnpj = body.cpfCnpj;
 
-		const uninitializedUser = await getUser(cnpj, middlewareData.DYNAMODB_USERS_TABLE);
+		const uninitializedUser = await getUser(cpfCnpj, middlewareData.DYNAMODB_USERS_TABLE);
 
 		if (!uninitializedUser) {
 			return ServerResponse.error(
 				HTTPStatusCode.CLIENT_ERROR.C404_NOT_FOUND,
-				'User not found with this CNPJ',
+				'User not found with this ID',
 			);
 		}
 
@@ -49,7 +49,7 @@ export const initializeFromCNPJ = makeGatewayHandler()
 		let user: UserInitialized;
 		try {
 			user = await initializeUser(
-				{ ...body, hashedPassword: hashedPassword },
+				{ ...body, hashedPassword },
 				uninitializedUser,
 				middlewareData.DYNAMODB_USERS_TABLE,
 			);
@@ -58,7 +58,7 @@ export const initializeFromCNPJ = makeGatewayHandler()
 			return ServerResponse.internalError();
 		}
 
-		const token = generateJWT({ cnpj }, middlewareData.JWT_SECRET);
+		const token = generateJWT({ cpfCnpj }, middlewareData.JWT_SECRET);
 
 		const response = ServerResponse.success(
 			{ token, user: { ...user, hashedPassword: null } },
