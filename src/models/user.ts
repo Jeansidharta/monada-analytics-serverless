@@ -1,6 +1,7 @@
 export type UserUninitialized = {
 	cpf: string;
 	creationDate: number;
+	accessKey: string | null;
 };
 
 export type UserInitialized = UserUninitialized & {

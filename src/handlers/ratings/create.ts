@@ -1,12 +1,12 @@
-import { createRating } from '../dynamo/ratings';
-import { expectAuth } from '../lib/handler-validators/expect-auth';
-import { expectBody } from '../lib/handler-validators/expect-body';
-import { validateBody } from '../lib/handler-validators/validate-body';
-import { makeGatewayHandler } from '../lib/make-handler';
-import { ServerResponse } from '../lib/server-response';
-import { Rating } from '../models/rating';
+import { createRating } from '../../dynamo/ratings';
+import { expectAuth } from '../../lib/handler-validators/expect-auth';
+import { expectBody } from '../../lib/handler-validators/expect-body';
+import { validateBody } from '../../lib/handler-validators/validate-body';
+import { makeGatewayHandler } from '../../lib/make-handler';
+import { ServerResponse } from '../../lib/server-response';
+import { Rating } from '../../models/rating';
 import v8n from 'v8n';
-import { expectEnv } from '../lib/handler-validators/require-env';
+import { expectEnv } from '../../lib/handler-validators/require-env';
 
 export const create = makeGatewayHandler()
 	.use(expectEnv('DYNAMODB_RATINGS_TABLE'))

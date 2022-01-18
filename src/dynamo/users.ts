@@ -1,11 +1,16 @@
 import aws from 'aws-sdk';
 import { UserUninitialized, UserInitialized } from '../models/user';
 
-export async function createUserFromCpf(cpf: string, DYNAMODB_USERS_TABLE: string) {
+export async function createUserFromCpf(
+	cpf: string,
+	accessKey: string,
+	DYNAMODB_USERS_TABLE: string,
+) {
 	const docClient = new aws.DynamoDB.DocumentClient();
 
 	const Item: UserUninitialized = {
 		cpf,
+		accessKey,
 		creationDate: Date.now(),
 	};
 
@@ -25,7 +30,7 @@ export async function initializeUser(
 	const docClient = new aws.DynamoDB.DocumentClient();
 
 	const { hashedPassword, name } = initializationData;
-	const { cpf, creationDate } = uninitializedUser;
+	const { cpf, creationDate, accessKey } = uninitializedUser;
 
 	// Don't use spread operator here to prevent unwanted keys to be stored in the DB
 	const Item: UserInitialized = {
@@ -33,6 +38,7 @@ export async function initializeUser(
 		creationDate,
 		hashedPassword,
 		name,
+		accessKey,
 		initializationDate: Date.now(),
 	};
 

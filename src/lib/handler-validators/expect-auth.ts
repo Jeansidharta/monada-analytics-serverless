@@ -3,6 +3,7 @@ import { HTTPStatusCode } from '../server-response/status-codes';
 import { JWTPayload, verifyJWT } from '../jwt';
 import { APIGatewayProxyEvent } from 'aws-lambda';
 import { Middleware } from '../make-handler/middleware';
+import jwt from 'jsonwebtoken';
 
 type RequiredData = {
 	/** Env variable. The secret to be used for JWT generation/decryption */
@@ -11,7 +12,7 @@ type RequiredData = {
 
 type ResultData = {
 	/** The contents that was stored inside the user token */
-	tokenContent: JWTPayload;
+	tokenContent: JWTPayload & jwt.JwtPayload;
 };
 
 const extractAuthorizationToken = (event: APIGatewayProxyEvent) =>

@@ -17,10 +17,11 @@ custom:
       - '*'
   dotenvVars: ${file(configs.js)}
   tables:
-    submissionsTable: ${self:service}-user-submissions-${sls:stage}
+    submissionsTable: ${self:service}-submissions-${sls:stage}
     usersTable: ${self:service}-users-${sls:stage}
     ratingsTable: ${self:service}-ratings-${sls:stage}
     tosRefusalMessageTable: ${self:service}-tos-refusal-message-${sls:stage}
+    accessKey: ${self:service}-access-key-${sls:stage}
 
 provider:
   name: aws
@@ -48,6 +49,7 @@ functions:
     environment:
       SIGNUP_SECRET: ${self:custom.dotenvVars.SIGNUP_SECRET}
       DYNAMODB_USERS_TABLE: ${self:custom.tables.usersTable}
+      DYNAMODB_ACCESS_KEY_TABLE: ${self:custom.tables.accessKey}
 
   userInitialize:
     handler: src/handlers/users/initialize.initialize
@@ -60,8 +62,8 @@ functions:
       JWT_SECRET: ${self:custom.dotenvVars.JWT_SECRET}
       DYNAMODB_USERS_TABLE: ${self:custom.tables.usersTable}
 
-  userFetchStatus:
-    handler: src/handlers/users/fetch-status.fetchStatus
+  validateAccessKey:
+    handler: src/handlers/users/validate-access-key.validateAccessKey
     events:
       - http:
           cors: ${self:custom.defaultLambdaCors}
@@ -69,18 +71,7 @@ functions:
           method: POST
     environment:
       DYNAMODB_USERS_TABLE: ${self:custom.tables.usersTable}
-
-  userLogin:
-    handler: src/handlers/users/login.login
-    events:
-      - http:
-          cors: ${self:custom.defaultLambdaCors}
-          path: /users/login
-          method: POST
-    environment:
-      JWT_SECRET: ${self:custom.dotenvVars.JWT_SECRET}
-      DYNAMODB_USERS_TABLE: ${self:custom.tables.usersTable}
-      DYNAMODB_SUBMISSIONS_TABLE: ${self:custom.tables.submissionsTable}
+      DYNAMODB_ACCESS_KEY_TABLE: ${self:custom.tables.accessKey}
 
   # Submissions Functions
   submissionsAddCategory:
@@ -156,6 +147,17 @@ resources:
             AttributeType: S
         KeySchema:
           - AttributeName: cpf
+            KeyType: HASH
+    accessKeys:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        BillingMode: PAY_PER_REQUEST
+        TableName: ${self:custom.tables.accessKey}
+        AttributeDefinitions:
+          - AttributeName: key
+            AttributeType: S
+        KeySchema:
+          - AttributeName: key
             KeyType: HASH
     ratingsTable:
       Type: AWS::DynamoDB::Table

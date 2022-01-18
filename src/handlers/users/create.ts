@@ -1,3 +1,4 @@
+import { AccessKey } from '../../models/access-key';
 import v8n from 'v8n';
 import { createUserFromCpf, doesUserExist } from '../../dynamo/users';
 import { expectBody } from '../../lib/handler-validators/expect-body';
@@ -6,10 +7,12 @@ import { validateBody } from '../../lib/handler-validators/validate-body';
 import { makeGatewayHandler } from '../../lib/make-handler';
 import { ServerResponse } from '../../lib/server-response';
 import { HTTPStatusCode } from '../../lib/server-response/status-codes';
+import { createAccessKey } from '../../dynamo/access-key';
 
 export const create = makeGatewayHandler()
 	.use(expectEnv('SIGNUP_SECRET'))
 	.use(expectEnv('DYNAMODB_USERS_TABLE'))
+	.use(expectEnv('DYNAMODB_ACCESS_KEY_TABLE'))
 	.use(expectBody())
 	.use(
 		validateBody<{ secret: string; cpf: string }>(
@@ -47,9 +50,21 @@ export const create = makeGatewayHandler()
 			);
 		}
 
+		let accessKey: AccessKey;
+
 		try {
-			const user = await createUserFromCpf(cpf, middlewareData.DYNAMODB_USERS_TABLE);
-			return ServerResponse.success(user, 'Usuário criado com sucesso');
+			accessKey = await createAccessKey(cpf, middlewareData.DYNAMODB_ACCESS_KEY_TABLE);
+		} catch (e) {
+			console.error('Failed to access key', e);
+			return ServerResponse.internalError();
+		}
+
+		try {
+			const user = await createUserFromCpf(cpf, accessKey.key, middlewareData.DYNAMODB_USERS_TABLE);
+			return ServerResponse.success(
+				{ user, accessKey: accessKey.key },
+				'Usuário criado com sucesso',
+			);
 		} catch (e) {
 			console.error('Failed to create user', e);
 			return ServerResponse.internalError();

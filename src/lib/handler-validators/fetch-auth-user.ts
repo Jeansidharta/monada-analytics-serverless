@@ -16,10 +16,10 @@ type ResultData = {
 
 export function fetchAuthUser(): Middleware<RequiredData, ResultData, any> {
 	return async middlewareData => {
-		const { cnpj } = middlewareData.tokenContent;
+		const { cpf } = middlewareData.tokenContent;
 		let user: UserInitialized | UserUninitialized | null;
 		try {
-			user = await getUser(cnpj, middlewareData.DYNAMODB_USERS_TABLE);
+			user = await getUser(cpf, middlewareData.DYNAMODB_USERS_TABLE);
 		} catch (e) {
 			console.error('Failed to fetch user on authorization verification', e);
 			return ServerResponse.internalError();

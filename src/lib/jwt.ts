@@ -6,13 +6,13 @@ export type JWTPayload = {
 
 export function verifyJWT(token: string, secret: string) {
 	try {
-		return jwt.verify(token, secret) as JWTPayload;
+		return jwt.verify(token, secret) as jwt.JwtPayload & JWTPayload;
 	} catch (e) {
 		return null;
 	}
 }
 
-export function generateJWT({ cpf }: JWTPayload, secret: string) {
+export function generateJWT({ cpf }: JWTPayload, expirationDate: number, secret: string) {
 	const cleanPayload: JWTPayload = { cpf };
-	return jwt.sign(cleanPayload, secret, { expiresIn: '7d' });
+	return jwt.sign({ ...cleanPayload, exp: expirationDate }, secret);
 }
