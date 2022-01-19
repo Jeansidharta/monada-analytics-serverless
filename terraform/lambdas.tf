@@ -30,6 +30,29 @@ module "lambda_users_initialize" {
   environment_variables = {
     JWT_SECRET = local.JWT_SECRET
     DYNAMODB_USERS_TABLE = local.table_users_name
+    DYNAMODB_ACCESS_KEY_TABLE = local.table_access_key_name
+  }
+
+  project_prefix = local.project_prefix
+  environment_name = local.environment_name
+	api_gateway_id = aws_apigatewayv2_api.lambda.id
+  api_gateway_execution_arn = aws_apigatewayv2_api.lambda.execution_arn
+}
+
+module "lambda_users_login" {
+  source = "./modules/default-lambda"
+
+  method = "POST"
+  path = "/users/login"
+  handler_filename = "users"
+  handler_entry_point = "login"
+
+  timeout = 5
+  environment_variables = {
+    JWT_SECRET = local.JWT_SECRET
+    DYNAMODB_USERS_TABLE = local.table_users_name
+    DYNAMODB_SUBMISSIONS_TABLE = local.table_submissions_name
+    DYNAMODB_ACCESS_KEY_TABLE = local.table_access_key_name
   }
 
   project_prefix = local.project_prefix

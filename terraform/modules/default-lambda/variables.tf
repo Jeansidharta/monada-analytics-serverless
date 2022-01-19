@@ -31,7 +31,14 @@ variable "api_gateway_execution_arn" {
 }
 
 variable "environment_variables" {
+	description = "Environment variables available to the function"
 	type = any
+}
+
+variable "timeout" {
+	description = "Time (in seconds) for the function to timeout"
+	type = number
+	default = 3
 }
 
 locals {

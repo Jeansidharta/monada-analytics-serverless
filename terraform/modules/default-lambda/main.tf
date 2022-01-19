@@ -43,6 +43,7 @@ resource "aws_lambda_function" "lambda" {
 	s3_key = aws_s3_bucket_object.source_code_object.key
 
 	runtime = "nodejs12.x"
+	timeout = var.timeout
 
 	source_code_hash = data.archive_file.lambda_code.output_base64sha256
 

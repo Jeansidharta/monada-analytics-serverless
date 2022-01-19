@@ -4,10 +4,11 @@
 	"description": "",
 	"main": "handler.js",
 	"scripts": {
-		"offline": "serverless offline --httpPort 8080",
 		"build": "webpack",
-		"deploy:prod": "serverless deploy --stage prod",
-		"deploy:dev": "serverless deploy --stage dev",
+		"deploy": "terraform -chdir=\"./terraform\" apply",
+		"deploy-force": "npm run deploy -- -auto-approve",
+		"build-deploy": "npm run build && npm run deploy",
+		"build-deploy-force": "npm run build && npm run deploy-force",
 		"lint": "tsc --noEmit",
 		"upgrade": "npx npm-check-updates -u"
 	},

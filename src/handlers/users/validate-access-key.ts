@@ -4,12 +4,9 @@ import { validateBody } from '../../lib/handler-validators/validate-body';
 import { makeGatewayHandler } from '../../lib/make-handler';
 import v8n from 'v8n';
 import { ServerResponse } from '../../lib/server-response';
-import { isUserInitialized, UserInitialized, UserUninitialized } from '../../models/user';
 import { getAccessKey } from '../../dynamo/access-key';
 import { AccessKey } from '../../models/access-key';
 import { HTTPStatusCode } from '../../lib/server-response/status-codes';
-import { getUser } from '../../dynamo/users';
-import { generateJWT } from '../../lib/jwt';
 
 export const validateAccessKey = makeGatewayHandler()
 	.use(expectEnv('JWT_SECRET'))
@@ -37,45 +34,16 @@ export const validateAccessKey = makeGatewayHandler()
 		if (!accessKey) {
 			return ServerResponse.error(
 				HTTPStatusCode.CLIENT_ERROR.C404_NOT_FOUND,
-				'Chave de acesso não encontrada',
+				'Chave de acesso inválida',
 			);
 		}
 
-		if (accessKey.expirationDate > Date.now()) {
+		if (Date.now() > accessKey.expirationDate) {
 			return ServerResponse.error(
 				HTTPStatusCode.CLIENT_ERROR.C401_UNAUTHORIZED,
 				'Chave de acesso expirada',
 			);
 		}
 
-		let user: UserUninitialized | UserInitialized | null;
-
-		try {
-			user = await getUser(key, middlewareData.DYNAMODB_USERS_TABLE);
-		} catch (e) {
-			console.error('Failed to fetch user', e);
-			return ServerResponse.internalError();
-		}
-
-		if (!user) {
-			console.error(`Failed to fetch user associated with access key "${accessKey.key}"`);
-			return ServerResponse.internalError();
-		}
-
-		const token = generateJWT(
-			{ cpf: user.cpf },
-			accessKey.expirationDate,
-			middlewareData.JWT_SECRET,
-		);
-
-		let response: ServerResponse;
-		if (isUserInitialized(user)) {
-			response = ServerResponse.success({ user, token, status: 'INITIALIZED' });
-		} else {
-			response = ServerResponse.success({ user, token, status: 'UNINITIALIZED' });
-		}
-
-		response.headers['Authorization'] = token;
-
-		return response;
+		return ServerResponse.success('Chave de acesso válida');
 	});

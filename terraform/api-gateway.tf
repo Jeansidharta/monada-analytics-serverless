@@ -3,10 +3,11 @@ resource "aws_apigatewayv2_api" "lambda" {
 	protocol_type = "HTTP"
 
 	cors_configuration {
-		allow_origins = ["*"]
-		allow_methods = ["*"]
-		allow_headers = ["Content-Type"]
-		expose_headers = ["*"]
+		allow_origins = ["https://analytics.monada.tech", "http://localhost:3000"]
+		allow_methods = ["GET", "POST", "OPTIONS"]
+		allow_headers = ["Content-Type", "Authorization"]
+		expose_headers = ["Authorization"]
+		allow_credentials = true
 		max_age = 300
 	}
 }

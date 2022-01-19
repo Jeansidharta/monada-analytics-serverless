@@ -9,16 +9,18 @@ import { HTTPStatusCode } from '../../lib/server-response/status-codes';
 import { isUserInitialized, UserInitialized } from '../../models/user';
 import bcrypt from 'bcryptjs';
 import { generateJWT } from '../../lib/jwt';
-import { expectAuth } from '../../lib/handler-validators/expect-auth';
+import { AccessKey } from '../../models/access-key';
+import { getAccessKey } from '../../dynamo/access-key';
 
 export const initialize = makeGatewayHandler()
 	.use(expectEnv('JWT_SECRET'))
 	.use(expectEnv('DYNAMODB_USERS_TABLE'))
+	.use(expectEnv('DYNAMODB_ACCESS_KEY_TABLE'))
 	.use(expectBody())
-	.use(expectAuth())
 	.use(
-		validateBody<{ name: string; password: string }>(
+		validateBody<{ accessKey: string; name: string; password: string }>(
 			v8n().schema({
+				accessKey: v8n().string().not.empty(),
 				name: v8n().string().not.empty(),
 				password: v8n().string().not.empty(),
 			}),
@@ -26,17 +28,33 @@ export const initialize = makeGatewayHandler()
 	)
 	.asHandler(async middlewareData => {
 		const body = middlewareData.body;
+		let accessKey: AccessKey | null;
+		try {
+			accessKey = await getAccessKey(body.accessKey, middlewareData.DYNAMODB_ACCESS_KEY_TABLE);
+		} catch (e) {
+			console.error('Failed to fetch access key', e);
+			return ServerResponse.internalError();
+		}
 
-		const cpf = middlewareData.tokenContent.cpf;
-		const exp = middlewareData.tokenContent.exp!;
-
-		const uninitializedUser = await getUser(cpf, middlewareData.DYNAMODB_USERS_TABLE);
-
-		if (!uninitializedUser) {
+		if (!accessKey) {
 			return ServerResponse.error(
 				HTTPStatusCode.CLIENT_ERROR.C404_NOT_FOUND,
-				'Usuário não encontrado com esse CPF',
+				'Chave de acesso inválida',
 			);
+		}
+
+		if (Date.now() > accessKey.expirationDate) {
+			return ServerResponse.error(
+				HTTPStatusCode.CLIENT_ERROR.C401_UNAUTHORIZED,
+				'Chave de acesso expirada',
+			);
+		}
+
+		const uninitializedUser = await getUser(accessKey.userCpf, middlewareData.DYNAMODB_USERS_TABLE);
+
+		if (!uninitializedUser) {
+			console.error(`No user associated with access key "${accessKey.key}" was found`);
+			return ServerResponse.internalError();
 		}
 
 		if (isUserInitialized(uninitializedUser)) {
@@ -51,7 +69,7 @@ export const initialize = makeGatewayHandler()
 		let user: UserInitialized;
 		try {
 			user = await initializeUser(
-				{ ...body, hashedPassword },
+				{ name: body.name, hashedPassword },
 				uninitializedUser,
 				middlewareData.DYNAMODB_USERS_TABLE,
 			);
@@ -60,7 +78,11 @@ export const initialize = makeGatewayHandler()
 			return ServerResponse.internalError();
 		}
 
-		const token = generateJWT({ cpf }, exp, middlewareData.JWT_SECRET);
+		const token = generateJWT(
+			{ cpf: user.cpf },
+			accessKey.expirationDate,
+			middlewareData.JWT_SECRET,
+		);
 
 		const response = ServerResponse.success(
 			{ token, user: { ...user, hashedPassword: null } },
