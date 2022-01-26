@@ -3,7 +3,7 @@ import { getUser } from '../../dynamo/users';
 import { HTTPStatusCode } from '../server-response/status-codes';
 import { Middleware } from '../make-handler/middleware';
 import { JWTPayload } from '../jwt';
-import { UserInitialized, UserUninitialized } from '../../models/user';
+import { User } from '../../models/user';
 
 type RequiredData = {
 	tokenContent: JWTPayload;
@@ -11,13 +11,13 @@ type RequiredData = {
 };
 
 type ResultData = {
-	user: UserInitialized | UserUninitialized;
+	user: User;
 };
 
 export function fetchAuthUser(): Middleware<RequiredData, ResultData, any> {
 	return async middlewareData => {
 		const { cpf } = middlewareData.tokenContent;
-		let user: UserInitialized | UserUninitialized | null;
+		let user: User | null;
 		try {
 			user = await getUser(cpf, middlewareData.DYNAMODB_USERS_TABLE);
 		} catch (e) {

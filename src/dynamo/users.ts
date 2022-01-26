@@ -1,43 +1,27 @@
 import aws from 'aws-sdk';
-import { UserUninitialized, UserInitialized } from '../models/user';
+import { PreInitializationUser } from '../models/pre-initialization-user';
+import { User } from '../models/user';
 
-export async function createUserFromCpf(
-	cpf: string,
-	accessKey: string,
-	DYNAMODB_USERS_TABLE: string,
-) {
-	const docClient = new aws.DynamoDB.DocumentClient();
-
-	const Item: UserUninitialized = {
-		cpf,
-		accessKey,
-		creationDate: Date.now(),
-	};
-
-	await docClient.put({ TableName: DYNAMODB_USERS_TABLE, Item }).promise();
-
-	return Item;
-}
-
-export async function initializeUser(
+export async function createUser(
 	initializationData: {
-		name: string;
+		cpf: string;
 		hashedPassword: string;
 	},
-	uninitializedUser: UserUninitialized,
+	uninitializedUser: PreInitializationUser,
 	DYNAMODB_USERS_TABLE: string,
 ) {
 	const docClient = new aws.DynamoDB.DocumentClient();
 
-	const { hashedPassword, name } = initializationData;
-	const { cpf, creationDate, accessKey } = uninitializedUser;
+	const { hashedPassword, cpf } = initializationData;
+	const { email, creationDate, accessKey } = uninitializedUser;
 
 	// Don't use spread operator here to prevent unwanted keys to be stored in the DB
-	const Item: UserInitialized = {
+	const Item: User = {
+		email,
 		cpf,
 		creationDate,
 		hashedPassword,
-		name,
+		name: '', // The name will be provided after
 		accessKey,
 		initializationDate: Date.now(),
 	};
@@ -55,7 +39,7 @@ export async function getUser(cpf: string, DYNAMODB_USERS_TABLE: string) {
 		return null;
 	}
 
-	return result.Item as unknown as UserInitialized | UserUninitialized;
+	return result.Item as unknown as User;
 }
 
 export async function doesUserExist(cpf: string, DYNAMODB_USERS_TABLE: string) {
@@ -65,4 +49,21 @@ export async function doesUserExist(cpf: string, DYNAMODB_USERS_TABLE: string) {
 
 export async function doesUserDoesNotExist(cpf: string, DYNAMODB_USERS_TABLE: string) {
 	return !(await doesUserExist(cpf, DYNAMODB_USERS_TABLE));
+}
+
+export async function addNameToUser(userCpf: string, name: string, DYNAMODB_USERS_TABLE: string) {
+	const docClient = new aws.DynamoDB.DocumentClient();
+
+	const data = await docClient
+		.update({
+			TableName: DYNAMODB_USERS_TABLE,
+			Key: { cpf: userCpf },
+			UpdateExpression: `set #un = :username`,
+			ExpressionAttributeValues: { ':username': name },
+			ExpressionAttributeNames: { '#un': 'name' },
+			ReturnValues: 'ALL_NEW',
+		})
+		.promise();
+
+	return data.Attributes as User;
 }

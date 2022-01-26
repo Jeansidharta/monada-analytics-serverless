@@ -4,15 +4,14 @@ import { validateBody } from '../../lib/handler-validators/validate-body';
 import { makeGatewayHandler } from '../../lib/make-handler';
 import v8n from 'v8n';
 import { ServerResponse } from '../../lib/server-response';
-import { isUserInitialized, UserInitialized } from '../../models/user';
-import { getAccessKey } from '../../dynamo/access-key';
-import { AccessKey } from '../../models/access-key';
 import { HTTPStatusCode } from '../../lib/server-response/status-codes';
-import { getUser } from '../../dynamo/users';
 import { generateJWT } from '../../lib/jwt';
 import bcrypt from 'bcryptjs';
 import { getSubmission } from '../../dynamo/submissions';
 import { Submission } from '../../models/submission';
+import { User } from '../../models/user';
+import { getUser } from '../../dynamo/users';
+import { expectAccessKeyInBody } from '../../lib/handler-validators/expect-access-key';
 
 export const login = makeGatewayHandler()
 	.use(expectEnv('JWT_SECRET'))
@@ -21,48 +20,25 @@ export const login = makeGatewayHandler()
 	.use(expectEnv('DYNAMODB_SUBMISSIONS_TABLE'))
 	.use(expectBody())
 	.use(
-		validateBody<{ accessKey: string; password: string }>(
+		validateBody<{ cpf: string; password: string; accessKey: string }>(
 			v8n().schema({
-				accessKey: v8n().string().not.empty(),
+				cpf: v8n().string().not.empty(),
 				password: v8n().string().not.empty(),
+				accessKey: v8n().string().not.empty(),
 			}),
 		),
 	)
+	.use(expectAccessKeyInBody())
 	.asHandler(async middlewareData => {
 		const body = middlewareData.body;
-		const key = body.accessKey;
 
-		let accessKey: AccessKey | null;
-		try {
-			accessKey = await getAccessKey(key, middlewareData.DYNAMODB_ACCESS_KEY_TABLE);
-		} catch (e) {
-			console.error('Failed to fetch access key', e);
-			return ServerResponse.internalError();
-		}
-
-		if (!accessKey) {
-			return ServerResponse.error(
-				HTTPStatusCode.CLIENT_ERROR.C404_NOT_FOUND,
-				'Chave de acesso ou senha inválidos',
-			);
-		}
-
-		if (Date.now() > accessKey.expirationDate) {
-			return ServerResponse.error(
-				HTTPStatusCode.CLIENT_ERROR.C401_UNAUTHORIZED,
-				'Chave de acesso expirada',
-			);
-		}
-
-		let user: UserInitialized | null;
+		let user: User | null;
 		let submissions: Submission | null;
 
 		try {
 			[user, submissions] = await Promise.all([
-				getUser(accessKey.userCpf, middlewareData.DYNAMODB_USERS_TABLE).then(
-					user => user as UserInitialized,
-				),
-				getSubmission(accessKey.userCpf, middlewareData.DYNAMODB_SUBMISSIONS_TABLE),
+				getUser(middlewareData.body.cpf, middlewareData.DYNAMODB_USERS_TABLE),
+				getSubmission(middlewareData.body.cpf, middlewareData.DYNAMODB_SUBMISSIONS_TABLE),
 			]);
 		} catch (e) {
 			console.error('Failed to fetch user or submissions', e);
@@ -70,20 +46,22 @@ export const login = makeGatewayHandler()
 		}
 
 		if (!user) {
-			console.error(`Failed to fetch user associated with access key "${accessKey.key}"`);
-			return ServerResponse.internalError();
+			return ServerResponse.error(
+				HTTPStatusCode.CLIENT_ERROR.C401_UNAUTHORIZED,
+				'CPF ou senha incorretos',
+			);
 		}
 
-		if (!isUserInitialized(user) || !bcrypt.compareSync(body.password, user.hashedPassword)) {
+		if (!bcrypt.compareSync(body.password, user.hashedPassword)) {
 			return ServerResponse.error(
-				HTTPStatusCode.CLIENT_ERROR.C403_FORBIDDEN,
-				'Chave de acesso ou senha inválidos',
+				HTTPStatusCode.CLIENT_ERROR.C401_UNAUTHORIZED,
+				'CPF ou senha incorretos',
 			);
 		}
 
 		const token = generateJWT(
 			{ cpf: user.cpf },
-			accessKey.expirationDate,
+			middlewareData.accessKey.expirationDate,
 			middlewareData.JWT_SECRET,
 		);
 

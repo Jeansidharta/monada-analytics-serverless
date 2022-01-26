@@ -39,7 +39,7 @@ resource "aws_lambda_function" "lambda" {
 	role          = aws_iam_role.iam_for_lambda.arn
 	handler       = "${var.handler_filename}.${var.handler_entry_point}"
 
-	s3_bucket = aws_s3_bucket.s3_lambda_source_code_bucket.bucket
+	s3_bucket = var.code_bucket
 	s3_key = aws_s3_bucket_object.source_code_object.key
 
 	runtime = "nodejs12.x"

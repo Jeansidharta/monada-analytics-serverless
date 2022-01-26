@@ -13,10 +13,24 @@ terraform {
     key    = "monada-analytics"
     workspace_key_prefix = "environments"
     region = "us-east-1"
+    profile = "monada"
   }
 }
 
 provider "aws" {
-  profile = "default"
+  profile = "monada"
   region  = "us-east-1"
+}
+
+
+resource "aws_s3_bucket" "s3_lambda_source_code_bucket" {
+	bucket = "${local.project_prefix}-lambda-source-code"
+	acl    = "private"
+	versioning {
+		enabled = true
+	}
+
+	lifecycle {
+	  prevent_destroy = true
+	}
 }

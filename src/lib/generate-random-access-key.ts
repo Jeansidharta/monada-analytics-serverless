@@ -69,7 +69,6 @@ const accessKeyCharacters = [
 	'O',
 	'e',
 	'u',
-	'-',
 	'P',
 	'f',
 	'v',

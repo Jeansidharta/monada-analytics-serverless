@@ -2,5 +2,6 @@ export interface AccessKey {
 	key: string;
 	creationDate: number;
 	expirationDate: number;
-	userCpf: string;
+	userEmail: string;
+	wasUsedToCreateLoginCredentials: boolean;
 }

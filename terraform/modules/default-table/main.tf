@@ -15,4 +15,8 @@ resource "aws_dynamodb_table" "users_table" {
 	  name = var.hash_key
 	  type = "S"
 	}
+
+	lifecycle {
+	  prevent_destroy = true
+	}
 }

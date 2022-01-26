@@ -9,9 +9,10 @@ locals {
 }
 
 locals {
-	table_users_name = "${local.project_prefix}-users-${local.environment_name}"
-	table_access_key_name = "${local.project_prefix}-access-key-${local.environment_name}"
-	table_submissions_name = "${local.project_prefix}-submissions-${local.environment_name}"
-	table_ratings_name = "${local.project_prefix}-ratings-${local.environment_name}"
-	table_tos_refusal_message_name = "${local.project_prefix}-tos-refusal-message-${local.environment_name}"
+	table_users_name = "${local.project_prefix}-${local.environment_name}-users"
+	table_pre_initialization_users_name = "${local.project_prefix}-${local.environment_name}-pre-initialization-users"
+	table_access_key_name = "${local.project_prefix}-${local.environment_name}-access-key"
+	table_submissions_name = "${local.project_prefix}-${local.environment_name}-submissions"
+	table_ratings_name = "${local.project_prefix}-${local.environment_name}-ratings"
+	table_tos_refusal_message_name = "${local.project_prefix}-${local.environment_name}-tos-refusal-message"
 }

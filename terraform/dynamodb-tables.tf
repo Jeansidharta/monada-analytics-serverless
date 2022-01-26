@@ -6,6 +6,13 @@ module "table_users" {
   hash_key = "cpf"
 }
 
+module "table_pre_initialization_users" {
+  source = "./modules/default-table"
+
+  table_name = local.table_pre_initialization_users_name
+  hash_key = "email"
+}
+
 module "table_submissions" {
   source = "./modules/default-table"
 

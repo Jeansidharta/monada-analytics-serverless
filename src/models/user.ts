@@ -1,25 +1,8 @@
-export type UserUninitialized = {
-	cpf: string;
-	creationDate: number;
-	accessKey: string | null;
-};
+import { PreInitializationUser } from './pre-initialization-user';
 
-export type UserInitialized = UserUninitialized & {
+export type User = PreInitializationUser & {
 	name: string;
+	cpf: string;
 	hashedPassword: string;
 	initializationDate: number;
 };
-
-export function isUserInitialized(user: any): user is UserInitialized {
-	if (!user) return false;
-	if (typeof user !== 'object') return false;
-	if (
-		!user.cpf ||
-		!user.name ||
-		!user.hashedPassword ||
-		!user.creationDate ||
-		!user.initializationDate
-	)
-		return false;
-	return true;
-}

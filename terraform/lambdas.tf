@@ -9,6 +9,29 @@ module "lambda_users_create" {
 
   environment_variables = {
     SIGNUP_SECRET = local.SIGNUP_SECRET
+    DYNAMODB_PRE_INITIALIZATION_USERS_TABLE = local.table_pre_initialization_users_name
+    DYNAMODB_ACCESS_KEY_TABLE = local.table_access_key_name
+  }
+
+  project_prefix = local.project_prefix
+  environment_name = local.environment_name
+	api_gateway_id = aws_apigatewayv2_api.lambda.id
+  api_gateway_execution_arn = aws_apigatewayv2_api.lambda.execution_arn
+  code_bucket = aws_s3_bucket.s3_lambda_source_code_bucket.bucket
+}
+
+module "lambda_users_create_Login_credentials" {
+  source = "./modules/default-lambda"
+
+  method = "POST"
+  path = "/users/create-login-credentials"
+  handler_filename = "users"
+  handler_entry_point = "createLoginCredentials"
+
+  timeout = 10
+  environment_variables = {
+    JWT_SECRET = local.JWT_SECRET
+    DYNAMODB_PRE_INITIALIZATION_USERS_TABLE = local.table_pre_initialization_users_name
     DYNAMODB_USERS_TABLE = local.table_users_name
     DYNAMODB_ACCESS_KEY_TABLE = local.table_access_key_name
   }
@@ -17,26 +40,27 @@ module "lambda_users_create" {
   environment_name = local.environment_name
 	api_gateway_id = aws_apigatewayv2_api.lambda.id
   api_gateway_execution_arn = aws_apigatewayv2_api.lambda.execution_arn
+  code_bucket = aws_s3_bucket.s3_lambda_source_code_bucket.bucket
 }
 
-module "lambda_users_initialize" {
+module "lambda_users_create_name" {
   source = "./modules/default-lambda"
 
   method = "POST"
-  path = "/users/initialize"
+  path = "/users/create-name"
   handler_filename = "users"
-  handler_entry_point = "initialize"
+  handler_entry_point = "createName"
 
   environment_variables = {
     JWT_SECRET = local.JWT_SECRET
     DYNAMODB_USERS_TABLE = local.table_users_name
-    DYNAMODB_ACCESS_KEY_TABLE = local.table_access_key_name
   }
 
   project_prefix = local.project_prefix
   environment_name = local.environment_name
 	api_gateway_id = aws_apigatewayv2_api.lambda.id
   api_gateway_execution_arn = aws_apigatewayv2_api.lambda.execution_arn
+  code_bucket = aws_s3_bucket.s3_lambda_source_code_bucket.bucket
 }
 
 module "lambda_users_login" {
@@ -47,7 +71,7 @@ module "lambda_users_login" {
   handler_filename = "users"
   handler_entry_point = "login"
 
-  timeout = 5
+  timeout = 10
   environment_variables = {
     JWT_SECRET = local.JWT_SECRET
     DYNAMODB_USERS_TABLE = local.table_users_name
@@ -59,6 +83,7 @@ module "lambda_users_login" {
   environment_name = local.environment_name
 	api_gateway_id = aws_apigatewayv2_api.lambda.id
   api_gateway_execution_arn = aws_apigatewayv2_api.lambda.execution_arn
+  code_bucket = aws_s3_bucket.s3_lambda_source_code_bucket.bucket
 }
 
 module "lambda_validate_access_key" {
@@ -71,7 +96,6 @@ module "lambda_validate_access_key" {
 
   environment_variables = {
     JWT_SECRET = local.JWT_SECRET
-    DYNAMODB_USERS_TABLE = local.table_users_name
     DYNAMODB_ACCESS_KEY_TABLE = local.table_access_key_name
   }
 
@@ -79,6 +103,27 @@ module "lambda_validate_access_key" {
   environment_name = local.environment_name
 	api_gateway_id = aws_apigatewayv2_api.lambda.id
   api_gateway_execution_arn = aws_apigatewayv2_api.lambda.execution_arn
+  code_bucket = aws_s3_bucket.s3_lambda_source_code_bucket.bucket
+}
+
+module "lambda_fetch_access_key" {
+  source = "./modules/default-lambda"
+
+  method = "POST"
+  path = "/users/fetch-access-key"
+  handler_filename = "users"
+  handler_entry_point = "fetchAccessKey"
+
+  environment_variables = {
+    SIGNUP_SECRET = local.SIGNUP_SECRET
+    DYNAMODB_ACCESS_KEY_TABLE = local.table_access_key_name
+  }
+
+  project_prefix = local.project_prefix
+  environment_name = local.environment_name
+	api_gateway_id = aws_apigatewayv2_api.lambda.id
+  api_gateway_execution_arn = aws_apigatewayv2_api.lambda.execution_arn
+  code_bucket = aws_s3_bucket.s3_lambda_source_code_bucket.bucket
 }
 
 # Submissions Functions
@@ -100,6 +145,7 @@ module "lambda_submissions_add_category" {
   environment_name = local.environment_name
 	api_gateway_id = aws_apigatewayv2_api.lambda.id
   api_gateway_execution_arn = aws_apigatewayv2_api.lambda.execution_arn
+  code_bucket = aws_s3_bucket.s3_lambda_source_code_bucket.bucket
 }
 
 module "lambda_submissions_get" {
@@ -120,6 +166,7 @@ module "lambda_submissions_get" {
   environment_name = local.environment_name
 	api_gateway_id = aws_apigatewayv2_api.lambda.id
   api_gateway_execution_arn = aws_apigatewayv2_api.lambda.execution_arn
+  code_bucket = aws_s3_bucket.s3_lambda_source_code_bucket.bucket
 }
 
 # Ratings functions
@@ -141,6 +188,7 @@ module "lambda_create_rating" {
   environment_name = local.environment_name
 	api_gateway_id = aws_apigatewayv2_api.lambda.id
   api_gateway_execution_arn = aws_apigatewayv2_api.lambda.execution_arn
+  code_bucket = aws_s3_bucket.s3_lambda_source_code_bucket.bucket
 }
 
 # TOS Refusal functions
@@ -160,4 +208,5 @@ module "lambda_TOS_refusal_message_create" {
   environment_name = local.environment_name
 	api_gateway_id = aws_apigatewayv2_api.lambda.id
   api_gateway_execution_arn = aws_apigatewayv2_api.lambda.execution_arn
+  code_bucket = aws_s3_bucket.s3_lambda_source_code_bucket.bucket
 }

@@ -30,6 +30,10 @@ variable "api_gateway_execution_arn" {
 	type = string
 }
 
+variable "code_bucket" {
+	type = string
+}
+
 variable "environment_variables" {
 	description = "Environment variables available to the function"
 	type = any
