@@ -116,6 +116,7 @@ module "lambda_fetch_access_key" {
 
   environment_variables = {
     SIGNUP_SECRET = local.SIGNUP_SECRET
+    DYNAMODB_PRE_INITIALIZATION_USERS_TABLE = local.table_pre_initialization_users_name
     DYNAMODB_ACCESS_KEY_TABLE = local.table_access_key_name
   }
 

@@ -13,12 +13,12 @@ terraform {
     key    = "monada-analytics"
     workspace_key_prefix = "environments"
     region = "us-east-1"
-    profile = "monada"
+    profile = "tech_viz"
   }
 }
 
 provider "aws" {
-  profile = "monada"
+  profile = "tech_viz"
   region  = "us-east-1"
 }
 
